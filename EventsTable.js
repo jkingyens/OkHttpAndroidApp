@@ -42,7 +42,8 @@ export default class EventsTable extends Component {
         return <View style={{ flex: 1 }}>
             <View>
                 <Text style={{fontWeight: 'bold'}}>Events</Text>
-                <FlatList
+                <View>
+                <FlatList style={{ flex: 1 }}
                     ref = "flatList"
                     data={this.state.events}
                     renderItem={({ item }) => <Text>{item.networkId} {item.event}</Text>}
@@ -51,6 +52,7 @@ export default class EventsTable extends Component {
                         this.refs.flatList.scrollToEnd({animated: true});
                     }}
                 />
+                </View>
             </View>
         </View>;
     }

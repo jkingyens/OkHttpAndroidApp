@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { FlatList, StyleSheet, Text, View, Button, DeviceEventEmitter } from 'react-native';
+import { FlatList, StyleSheet, Text, View, Button, DeviceEventEmitter, TextInput } from 'react-native';
 import NetworkState from "./NetworkState";
 
 export default class RequestsTable extends Component {
@@ -7,13 +7,13 @@ export default class RequestsTable extends Component {
         super(props);
 
         this.state = {
-            results: []
+            results: [],
+            url: 'https://nghttp2.org/httpbin/get'
         }
     }
 
     handleExecutePressed() {
-        return fetch('https://api.coo.ee/api/v0/todo')
-            // return fetch('https://nghttp2.org/httpbin/get')
+        return fetch(this.state.url)
             .then((response) => {
                 this.setState({
                     results: this.state.results.concat("Success " + response.status)
@@ -32,16 +32,23 @@ export default class RequestsTable extends Component {
 
     render() {
         return <View style={{ flex: 1 }}>
-            <Text style={{fontWeight: 'bold'}}>Responses</Text>
+            <Text style={{ fontWeight: 'bold' }}>Responses</Text>
 
             <FlatList
-                ref = "flatList"
+                ref="flatList"
                 data={this.state.results}
                 renderItem={({ item }) => <Text>{item}</Text>}
                 keyExtractor={({ }, index) => "" + index}
-                onContentSizeChange={(contentWidth, contentHeight)=>{        
-                    this.refs.flatList.scrollToEnd({animated: true});
+                onContentSizeChange={(contentWidth, contentHeight) => {
+                    this.refs.flatList.scrollToEnd({ animated: true });
                 }}
+            />
+
+            <TextInput
+                style={{ height: 40, borderColor: 'gray', borderWidth: 1 }}
+                editable = {true}
+                value={this.state.url}
+                onChangeText={(text) => this.setState({ url: text })}
             />
 
             <Button title='execute query' onPress={() => this.handleExecutePressed()} />

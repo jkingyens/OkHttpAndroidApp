@@ -11,7 +11,7 @@ export default class App extends Component {
     }
 
     render() {
-        return <View style={{ flex: 1, flexDirection: 'column', padding: 10, justifyContent: 'space-between' }}>
+        return <View style={{ flex: 1, flexDirection: 'column', padding: 10, spaceBetween: 10 }}>
             <NetworkStateTable />
             <ConnectionPoolStateTable />
             <EventsTable />

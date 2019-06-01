@@ -40,13 +40,22 @@ export default class ConnectionPoolStateTable extends Component {
         }
 
         return <View style={{ flex: 1 }}>
+            <Text>
             <Text style={{fontWeight: 'bold'}}>Connections</Text>
+            {' '}
             <Text>Count: {this.state.connections.connectionsCount} Idle: {this.state.connections.idleConnectionsCount}</Text>
+            </Text>
             <FlatList
                 data={this.state.connections.connections}
-                renderItem={({item}) => <Text>{item.id} {item.destHost} {item.proxy} {item.host} {item.localAddress}</Text>}
+                renderItem={({item}) => this.renderConnection(item)}
                 keyExtractor={({id}, index) => id}
             />
         </View>;
+    }
+
+    renderConnection(item) {
+        return <Text>
+            {item.id} {item.destHost} {item.proxy} {item.host} {item.localAddress} {item.protocol} {item.tlsVersion} {item.noNewStreams ? "NNS" : ""}
+        </Text>;
     }
 }

@@ -12,7 +12,6 @@ import java.net.InetAddress
 import java.net.NetworkInterface
 import java.util.concurrent.CopyOnWriteArrayList
 
-@RequiresApi(Build.VERSION_CODES.M)
 class NetworksLiveData
 @RequiresPermission(android.Manifest.permission.ACCESS_NETWORK_STATE)
 constructor(application: Application)
@@ -45,13 +44,11 @@ constructor(application: Application)
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
     fun show(networkEvent: NetworkEvent) {
         this.events.add(networkEvent)
         postValue(networksState())
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
     private fun networksState(): NetworksState {
         val activeNetwork = connectivityManager.activeNetwork?.toString()
         val networks = connectivityManager.allNetworks.map { describe(it, activeNetwork == it.toString()) }
@@ -63,7 +60,6 @@ constructor(application: Application)
     }
 
     @Suppress("DEPRECATION")
-    @RequiresApi(Build.VERSION_CODES.M)
     private fun describe(network: Network, active: Boolean): NetworkState {
         val info: NetworkInfo? = connectivityManager.getNetworkInfo(network)
         val capabilities: NetworkCapabilities? = connectivityManager.getNetworkCapabilities(network)
@@ -82,14 +78,12 @@ constructor(application: Application)
                 localAddress?.hostAddress)
     }
 
-    @RequiresApi(Build.VERSION_CODES.N)
     override fun onActive() {
         val request = NetworkRequest.Builder().addCapability(
                 NetworkCapabilities.NET_CAPABILITY_INTERNET).build()
         connectivityManager.registerNetworkCallback(request, networkCallback)
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
     override fun onInactive() {
         connectivityManager.unregisterNetworkCallback(networkCallback)
     }
