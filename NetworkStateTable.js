@@ -7,8 +7,7 @@ export default class NetworkStateTable extends Component {
         super(props);
 
         this.state = {
-            isLoading: true,
-            networks: {}
+            networks: []
         }
 
         this.onStateEvent = this.onStateEvent.bind(this);
@@ -16,8 +15,7 @@ export default class NetworkStateTable extends Component {
 
     onStateEvent(networks) {
         this.setState({
-            isLoading: false,
-            networks: networks,
+            networks: networks.networks,
         }, () => { });
     }
 
@@ -32,17 +30,13 @@ export default class NetworkStateTable extends Component {
     }
 
     render() {
-        if (this.state.isLoading) {
-            return <View style={{ flex: 1 }}>
-                    <Text style={{fontWeight: 'bold'}}>Networks</Text>
-                    <Text>Loading...</Text>
-                </View>;
-        }
-
         return <View style={{ flex: 1 }}>
-            <Text style={{fontWeight: 'bold'}}>Networks</Text>
+            <Text>
+                <Text style={{fontWeight: 'bold'}}>Networks</Text>
+                <Text> {this.state.networks.length}</Text>
+            </Text>
             <FlatList
-                data={this.state.networks.networks}
+                data={this.state.networks}
                 renderItem={({ item }) => <Text>
                     {item.networkId} {item.name} {item.active} {item.connected ? "Connected" : "Disconnected"} {item.type} {item.active ? "Active" : "Not Active"} {item.state} {item.localAddress}
                 </Text>}

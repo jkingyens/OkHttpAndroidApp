@@ -30,14 +30,19 @@ constructor(val connectionPool: ConnectionPool)
     }
 
     private fun update() {
-        val connections = listConnections()
-        val newState = ConnectionPoolState(connectionPool.connectionCount(),
-                connectionPool.idleConnectionCount(), connections)
+        val newState = readState()
 
         if (newState != lastState) {
             postValue(newState)
             lastState = newState
         }
+    }
+
+    fun readState(): ConnectionPoolState {
+        val connections = listConnections()
+        val newState = ConnectionPoolState(connectionPool.connectionCount(),
+                connectionPool.idleConnectionCount(), connections)
+        return newState
     }
 
     private fun listConnections(): List<ConnectionState> {

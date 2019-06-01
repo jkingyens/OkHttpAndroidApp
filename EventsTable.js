@@ -7,7 +7,6 @@ export default class EventsTable extends Component {
         super(props);
 
         this.state = {
-            isLoading: true,
             events: []
         }
 
@@ -16,7 +15,6 @@ export default class EventsTable extends Component {
 
     onStateEvent(networks) {
         this.setState({
-            isLoading: false,
             events: networks.events,
         }, () => { });
     }
@@ -32,28 +30,19 @@ export default class EventsTable extends Component {
     }
 
     render() {
-        if (this.state.isLoading) {
-            return <View style={{ flex: 1 }}>
-                    <Text style={{fontWeight: 'bold'}}>Events</Text>
-                    <Text>Loading...</Text>
-                </View>;
-        }
-
         return <View style={{ flex: 1 }}>
-            <View>
-                <Text style={{fontWeight: 'bold'}}>Events</Text>
-                <View>
-                <FlatList style={{ flex: 1 }}
-                    ref = "flatList"
-                    data={this.state.events}
-                    renderItem={({ item }) => <Text>{item.networkId} {item.event}</Text>}
-                    keyExtractor={({ id }, index) => id}
-                    onContentSizeChange={(contentWidth, contentHeight)=>{        
-                        this.refs.flatList.scrollToEnd({animated: true});
-                    }}
-                />
-                </View>
-            </View>
+            <Text>
+                <Text style={{ fontWeight: 'bold' }}>Events</Text> <Text>{this.state.events.length}</Text>
+            </Text>
+            <FlatList style={{ flex: 1 }}
+                ref="flatList"
+                data={this.state.events}
+                renderItem={({ item }) => <Text>{item.networkId} {item.event}</Text>}
+                keyExtractor={({ id }, index) => id}
+                onContentSizeChange={(contentWidth, contentHeight) => {
+                    this.refs.flatList.scrollToEnd({ animated: true });
+                }}
+            />
         </View>;
     }
 }

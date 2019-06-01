@@ -4,24 +4,20 @@ import android.app.Application
 import android.arch.lifecycle.LiveData
 import android.content.Context
 import android.net.*
-import android.os.Build
-import android.support.annotation.RequiresApi
 import android.support.annotation.RequiresPermission
-import android.util.Log
+import org.apache.commons.lang3.StringUtils
 import java.net.InetAddress
 import java.net.NetworkInterface
-import java.util.concurrent.CopyOnWriteArrayList
 
 class NetworksLiveData
 @RequiresPermission(android.Manifest.permission.ACCESS_NETWORK_STATE)
 constructor(application: Application)
     : LiveData<NetworksState>() {
-    private var events = CopyOnWriteArrayList(listOf(NetworkEvent(null, "App Started")))
+    private val events = mutableListOf<NetworkEvent>()
     private val connectivityManager: ConnectivityManager = application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    private val lastProperties = mutableMapOf<String, LinkProperties>()
 
-    private val networkCallback = @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    object : ConnectivityManager.NetworkCallback() {
-
+    private val networkCallback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) {
             show(NetworkEvent(network.toString(), "available"))
         }
@@ -35,8 +31,20 @@ constructor(application: Application)
         }
 
         override fun onLinkPropertiesChanged(network: Network, linkProperties: LinkProperties) {
-            // TODO describe properties
-            show(NetworkEvent(network.toString(), "properties changed"))
+            val last = synchronized(lastProperties) { lastProperties[network.toString()] }
+
+            if (last != null && last != linkProperties) {
+                val diff = StringUtils.difference(last.toString(), linkProperties.toString())
+
+//            Log.w("NetworksLiveData", "OLD: " + last)
+//            Log.w("NetworksLiveData", "NEW: " + linkProperties)
+
+                show(NetworkEvent(network.toString(), "properties changed: $diff"))
+            }
+
+            synchronized(lastProperties) {
+                lastProperties[network.toString()] = linkProperties
+            }
         }
 
         override fun onLosing(network: Network, maxMsToLive: Int) {
@@ -45,18 +53,21 @@ constructor(application: Application)
     }
 
     fun show(networkEvent: NetworkEvent) {
-        this.events.add(networkEvent)
+        synchronized(events) {
+            this.events.add(networkEvent)
+        }
+
+        //        Log.w("NetworksLiveData", "" + networksState)
+
         postValue(networksState())
     }
 
-    private fun networksState(): NetworksState {
+    fun networksState(): NetworksState {
         val activeNetwork = connectivityManager.activeNetwork?.toString()
         val networks = connectivityManager.allNetworks.map { describe(it, activeNetwork == it.toString()) }
-        val networksState = NetworksState(networks, events.toList(), activeNetwork)
+        val eventsCopy = synchronized(events) { events.toList() }
 
-        Log.w("NetworksLiveData", "" + networksState)
-
-        return networksState
+        return NetworksState(networks, eventsCopy, activeNetwork)
     }
 
     @Suppress("DEPRECATION")

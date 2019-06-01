@@ -42,10 +42,11 @@ class MainApplication : Application(), ReactApplication {
         return mReactNativeHost
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate() {
         networksLiveData = NetworksLiveData(this)
+
         connectionLiveData = ConnectionsLiveData(customNetworkModule.connectionPool)
+
         networksPackage = NetworksPackage(networksLiveData, connectionLiveData)
 
         OkHttpClientProvider.setOkHttpClientFactory(customNetworkModule)

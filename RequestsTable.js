@@ -44,14 +44,15 @@ export default class RequestsTable extends Component {
                 }}
             />
 
-            <TextInput
-                style={{ height: 40, borderColor: 'gray', borderWidth: 1 }}
-                editable = {true}
-                value={this.state.url}
-                onChangeText={(text) => this.setState({ url: text })}
-            />
-
-            <Button title='execute query' onPress={() => this.handleExecutePressed()} />
+            <View style={{flexDirection: 'row'}}>
+                <TextInput
+                    style={{ height: 40, borderColor: 'gray', borderWidth: 1, flex: 1 }}
+                    editable={true}
+                    value={this.state.url}
+                    onChangeText={(text) => this.setState({ url: text })}
+                />
+                <Button title='execute query' onPress={() => this.handleExecutePressed()} />
+            </View>
         </View>;
     }
 }
