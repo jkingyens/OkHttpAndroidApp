@@ -2,9 +2,8 @@ package com.okhttpandroidapp.networks
 
 import android.Manifest
 import android.arch.lifecycle.LiveData
-import android.os.Build
-import android.support.annotation.RequiresApi
 import android.support.annotation.RequiresPermission
+import android.util.Log
 import okhttp3.ConnectionPool
 import okhttp3.Route
 import okhttp3.internal.connection.RealConnection
@@ -56,7 +55,7 @@ constructor(val connectionPool: ConnectionPool)
         val s = it.socket()
         return ConnectionState(id(s), remoteIp(r), r.socketAddress().port,
                 r.proxy().toString(), r.address().url().host(), s.localAddress.hostAddress,
-                it.protocol(), it.noNewStreams, it.handshake()?.tlsVersion())
+                it.protocol(), it.noNewStreams, it.handshake()?.tlsVersion(), it.successCount)
     }
 
     private fun id(s: Socket): String {
@@ -71,7 +70,7 @@ constructor(val connectionPool: ConnectionPool)
     }
 
     override fun onActive() {
-        activeTimer = timer(period = 1000) {
+        activeTimer = timer(period = 500) {
             update()
         }
     }

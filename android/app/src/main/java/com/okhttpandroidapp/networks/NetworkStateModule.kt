@@ -10,26 +10,12 @@ import com.facebook.react.modules.core.DeviceEventManagerModule
 
 class NetworkStateModule(reactContext: ReactApplicationContext,
                          val networksLiveData: NetworksLiveData,
-                         val connectionsLiveData: ConnectionsLiveData) : ReactContextBaseJavaModule(reactContext) {
+                         val connectionsLiveData: ConnectionsLiveData,
+                         val requestsLiveData: RequestsLiveData)
+    : ReactContextBaseJavaModule(reactContext) {
     @ReactMethod
     fun getNetworks(promise: Promise) {
         promise.resolve(networksLiveData.networksState().toMap())
-    }
-
-    fun startListeners(lifecycleOwner: LifecycleOwner) {
-        val observer = Observer<NetworksState> {
-            if (it != null) {
-                publishEvent(reactApplicationContext, it)
-            }
-        }
-        networksLiveData.observe(lifecycleOwner, observer)
-
-        val observer2 = Observer<ConnectionPoolState> {
-            if (it != null) {
-                publishEvent(reactApplicationContext, it)
-            }
-        }
-        connectionsLiveData.observe(lifecycleOwner, observer2)
     }
 
     @ReactMethod
@@ -37,18 +23,47 @@ class NetworkStateModule(reactContext: ReactApplicationContext,
         promise.resolve(connectionsLiveData.readState().toMap())
     }
 
+    @ReactMethod
+    fun getRequests(promise: Promise) {
+        promise.resolve(requestsLiveData.allRequests().toMap())
+    }
+
+    fun startListeners(lifecycleOwner: LifecycleOwner) {
+        networksLiveData.observe(lifecycleOwner, Observer {
+            if (it != null) {
+                publishEvent(reactApplicationContext, it)
+            }
+        })
+
+        connectionsLiveData.observe(lifecycleOwner, Observer {
+            if (it != null) {
+                publishEvent(reactApplicationContext, it)
+            }
+        })
+
+        requestsLiveData.observe(lifecycleOwner, Observer {
+            if (it != null) {
+                publishEvent(reactApplicationContext, it)
+            }
+        })
+    }
+
     private fun publishEvent(reactContext: ReactApplicationContext, state: NetworksState) {
-//        Log.w("NetworkStateModule", "${state.networks.map { it.name }} ${state.events.lastOrNull()?.event}")
         reactContext
                 .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
                 .emit("networkStateChanged", state.toMap())
     }
 
     private fun publishEvent(reactContext: ReactApplicationContext, state: ConnectionPoolState) {
-//        Log.w("NetworkStateModule", "$state")
         reactContext
                 .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
                 .emit("connectionPoolStateChanged", state.toMap())
+    }
+
+    private fun publishEvent(reactContext: ReactApplicationContext, state: RequestsState) {
+        reactContext
+                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                .emit("requestsChanged", state.toMap())
     }
 
     override fun getName(): String {

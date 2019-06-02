@@ -1,0 +1,29 @@
+package com.okhttpandroidapp.factory
+
+import android.util.Log
+import java.io.IOException
+import java.net.Proxy
+import java.net.ProxySelector
+import java.net.SocketAddress
+import java.net.URI
+
+class AndroidProxySelector(
+        private val androidNetworkManager: AndroidNetworkManager,
+        val systemSelector: ProxySelector = getDefault()) : ProxySelector() {
+
+    override fun select(uri: URI?): MutableList<Proxy> {
+        // TODO check bound network
+        // TODO otherwise discern the selected network and use that
+//        return androidNetworkManager.connectivityManager.defaultProxy.
+
+        val proxies = systemSelector.select(uri)
+
+        Log.i("AndroidProxySelector", "select proxy: $proxies")
+
+        return proxies
+    }
+
+    override fun connectFailed(uri: URI, sa: SocketAddress, ioe: IOException?) {
+        systemSelector.connectFailed(uri, sa, ioe)
+    }
+}

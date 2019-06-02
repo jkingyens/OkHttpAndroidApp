@@ -9,15 +9,25 @@ class MainActivity : ReactActivity() {
     override fun onStart() {
         super.onStart()
 
+        backgroundStartListeners()
+    }
+
+    private fun backgroundStartListeners() {
         Handler().postDelayed({
-            Log.w("MainActivity", "start network listener")
+            Log.w("MainActivity", "attempting to start network listeners")
             val mainApplication = this.application as MainApplication
-            try {
-                mainApplication.networksPackage.stateModule.startListeners(this)
-            } catch (e: UninitializedPropertyAccessException) {
-                Log.e("MainActivity", "failed", e)
+
+            if (mainApplication.networksPackage.isInitialised()) {
+                try {
+                    mainApplication.networksPackage.stateModule.startListeners(this)
+                } catch (e: UninitializedPropertyAccessException) {
+                    Log.e("MainActivity", "failed", e)
+                }
+            } else {
+                Log.w("MainActivity", "retry in 0.5 seconds")
+                backgroundStartListeners()
             }
-        }, 2000)
+        }, 500)
     }
 
     override fun getMainComponentName(): String? {
