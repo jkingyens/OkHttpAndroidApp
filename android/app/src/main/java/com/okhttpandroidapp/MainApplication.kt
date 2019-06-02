@@ -10,6 +10,7 @@ import com.facebook.react.modules.network.ReactCookieJarContainer
 import com.facebook.react.shell.MainReactPackage
 import com.facebook.soloader.SoLoader
 import com.okhttpandroidapp.factory.AndroidNetworkManager
+import com.okhttpandroidapp.factory.NetworkHookEventListener
 import com.okhttpandroidapp.factory.NetworkSelector
 import com.okhttpandroidapp.networks.ConnectionsLiveData
 import com.okhttpandroidapp.networks.NetworksLiveData
@@ -69,10 +70,11 @@ class MainApplication : Application(), ReactApplication {
             Log.i("MainApplication", "setOkHttpClientFactory")
             OkHttpClientProvider.setOkHttpClientFactory(OptimisedNetworkModule(androidNetworkManager!!))
         } else {
-            TODO()
-
             val connectionPool = ConnectionPool()
             connectionLiveData = ConnectionsLiveData(connectionPool)
+
+            networksPackage = NetworksPackage(networksLiveData, connectionLiveData, requestsLiveData)
+
             OkHttpClientProvider.setOkHttpClientFactory {
                 Log.i("MainApplication", "createNewNetworkModuleClient")
                 OkHttpClient.Builder()
@@ -81,6 +83,7 @@ class MainApplication : Application(), ReactApplication {
                         .readTimeout(0, TimeUnit.MILLISECONDS)
                         .writeTimeout(0, TimeUnit.MILLISECONDS)
                         .cookieJar(ReactCookieJarContainer())
+                        .eventListenerFactory { NetworkHookEventListener(null, it, requestsLiveData) }
                         .build()
             }
         }
