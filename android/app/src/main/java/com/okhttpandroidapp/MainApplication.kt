@@ -10,6 +10,7 @@ import com.facebook.react.modules.network.ReactCookieJarContainer
 import com.facebook.react.shell.MainReactPackage
 import com.facebook.soloader.SoLoader
 import com.okhttpandroidapp.factory.AndroidNetworkManager
+import com.okhttpandroidapp.factory.AvailableNetworksLiveData
 import com.okhttpandroidapp.factory.NetworkHookEventListener
 import com.okhttpandroidapp.factory.NetworkSelector
 import com.okhttpandroidapp.networks.ConnectionsLiveData
@@ -30,6 +31,7 @@ class MainApplication : Application(), ReactApplication {
     internal lateinit var networksPackage: NetworksPackage
     internal lateinit var customNetworkModule: OptimisedNetworkModule
     internal lateinit var networksLiveData: NetworksLiveData
+    internal lateinit var availableNetworksLiveData: AvailableNetworksLiveData
 
     private val mReactNativeHost = object : ReactNativeHost(this) {
         override fun getUseDeveloperSupport(): Boolean {
@@ -56,11 +58,14 @@ class MainApplication : Application(), ReactApplication {
         networksLiveData = NetworksLiveData(this)
         requestsLiveData = RequestsLiveData()
 
+        availableNetworksLiveData = AvailableNetworksLiveData(this)
+
         if (AppSettings.Optimised) {
             androidNetworkManager = AndroidNetworkManager(
                     this,
                     NetworkSelector.WifiFirst,
-                    requestsLiveData
+                    requestsLiveData,
+                    availableNetworksLiveData
             )
             androidNetworkManager!!.initialise(this.applicationContext)
             connectionLiveData = ConnectionsLiveData(androidNetworkManager!!.connectionPool)

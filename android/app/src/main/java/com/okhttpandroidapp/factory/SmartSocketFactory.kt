@@ -15,11 +15,7 @@ class SmartSocketFactory(private val androidNetworkManager: AndroidNetworkManage
 
         Log.i("SmartSocketFactory", "createSocket")
 
-        val selectedSocketAddress = androidNetworkManager.selectLocalSocketAddress()
-
-        if (selectedSocketAddress != null) {
-            s.bind(selectedSocketAddress)
-        }
+        androidNetworkManager.selectLocalSocketAddress(s)
 
         return s
     }

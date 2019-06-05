@@ -11,16 +11,8 @@ class AndroidProxySelector(
         private val androidNetworkManager: AndroidNetworkManager,
         val systemSelector: ProxySelector = getDefault()) : ProxySelector() {
 
-    override fun select(uri: URI?): MutableList<Proxy> {
-        // TODO check bound network
-        // TODO otherwise discern the selected network and use that
-//        return androidNetworkManager.connectivityManager.defaultProxy.
-
-        val proxies = systemSelector.select(uri)
-
-        Log.i("AndroidProxySelector", "select proxy: $proxies")
-
-        return proxies
+    override fun select(uri: URI?): List<Proxy> {
+        return androidNetworkManager.selectProxy(uri)
     }
 
     override fun connectFailed(uri: URI, sa: SocketAddress, ioe: IOException?) {

@@ -27,7 +27,7 @@ class MainActivity : ReactActivity() {
                 Log.w("MainActivity", "retry in 0.5 seconds")
                 backgroundStartListeners()
             }
-        }, 500)
+        }, 2000) // This is a pure hack
     }
 
     override fun getMainComponentName(): String? {
