@@ -1,6 +1,7 @@
 package com.okhttpandroidapp.networks
 
 import android.arch.lifecycle.LiveData
+import com.okhttpandroidapp.model.RequestsState
 import okhttp3.Call
 import okhttp3.Response
 import java.io.IOException

@@ -1,4 +1,4 @@
-package com.okhttpandroidapp.factory
+package com.okhttpandroidapp.model
 
 import android.net.LinkProperties
 import android.net.Network

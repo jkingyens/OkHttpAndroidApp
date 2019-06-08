@@ -6,6 +6,10 @@ import android.content.Context
 import android.net.*
 import android.net.wifi.WifiManager
 import android.util.Log
+import com.okhttpandroidapp.model.AvailableNetwork
+import com.okhttpandroidapp.model.AvailableNetworks
+import com.okhttpandroidapp.model.NetworkStatus
+import com.okhttpandroidapp.model.NetworkType
 
 class AvailableNetworksLiveData(val application: Application): LiveData<AvailableNetworks>() {
     internal val connectivityManager: ConnectivityManager =

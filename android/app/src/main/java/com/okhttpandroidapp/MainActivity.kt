@@ -1,33 +1,24 @@
 package com.okhttpandroidapp
 
-import android.os.Handler
+import android.os.Bundle
+import android.os.PersistableBundle
 import android.util.Log
 import com.facebook.react.ReactActivity
 
 class MainActivity : ReactActivity() {
-
     override fun onStart() {
         super.onStart()
 
-        backgroundStartListeners()
+        Log.i("NetworkStateModule", "Activity onStart")
+
+        val mainApplication = this.application as MainApplication
+        mainApplication.networksPackage.startListeners(this)
     }
 
-    private fun backgroundStartListeners() {
-        Handler().postDelayed({
-            Log.w("MainActivity", "attempting to start network listeners")
-            val mainApplication = this.application as MainApplication
+    override fun onCreate(savedInstanceState: Bundle?, persistentState: PersistableBundle?) {
+        super.onCreate(savedInstanceState, persistentState)
 
-            if (mainApplication.networksPackage.isInitialised()) {
-                try {
-                    mainApplication.networksPackage.stateModule.startListeners(this)
-                } catch (e: UninitializedPropertyAccessException) {
-                    Log.e("MainActivity", "failed", e)
-                }
-            } else {
-                Log.w("MainActivity", "retry in 0.5 seconds")
-                backgroundStartListeners()
-            }
-        }, 2000) // This is a pure hack
+        Log.i("NetworkStateModule", "Activity onCreate")
     }
 
     override fun getMainComponentName(): String? {

@@ -1,36 +1,62 @@
 package com.okhttpandroidapp.factory
 
 import android.app.Application
-import android.arch.lifecycle.Observer
 import android.content.Context
 import android.net.ProxyInfo
 import android.util.Log
+import com.babylon.certificatetransparency.Logger
+import com.babylon.certificatetransparency.VerificationResult
+import com.babylon.certificatetransparency.certificateTransparencyInterceptor
 import com.facebook.react.modules.network.ReactCookieJarContainer
+import com.okhttpandroidapp.android.PhoneStatusLiveData
 import com.okhttpandroidapp.android.initConscrypt
+import com.okhttpandroidapp.networks.ConnectionsLiveData
+import com.okhttpandroidapp.networks.NetworksLiveData
 import com.okhttpandroidapp.networks.RequestsLiveData
+import com.okhttpandroidapp.util.closeQuietly
 import okhttp3.*
 import okhttp3.internal.connection.RealConnection
 import java.net.*
 import java.util.concurrent.TimeUnit
 
 class AndroidNetworkManager(private val application: Application,
-                            private val networkSelector: NetworkSelector,
-                            private val requestsLiveData: RequestsLiveData,
-                            private val availableNetworksLiveData: AvailableNetworksLiveData
-) {
+                            private val config: Config,
+                            private val networkSelector: NetworkSelector) {
+    val connectionPool = ConnectionPool()
+    val networksLiveData = NetworksLiveData(application)
+    val requestsLiveData = RequestsLiveData()
+    val phoneStatusLiveData = PhoneStatusLiveData(application)
+    val availableNetworksLiveData = AvailableNetworksLiveData(application)
+    var connectionLiveData = ConnectionsLiveData(connectionPool)
+
     private lateinit var client: OkHttpClient
 
     private val networkSocketMap = mutableMapOf<String, MutableList<Socket>>()
     private val networkConnectionMap = mutableMapOf<String, MutableList<RealConnection>>()
-    val connectionPool = ConnectionPool()
     private val dispatcher = Dispatcher()
-    // TODO don't assume react native
-    private val cookieJar = ReactCookieJarContainer()
     private val dns: Dns = AndroidDns(this)
-    private lateinit var cache: Cache
+    private var cache: Cache? = null
 
     fun initialise(context: Context) {
-        initConscrypt()
+        if (config.conscrypt) {
+            initConscrypt()
+        }
+
+        val ctIinterceptor = certificateTransparencyInterceptor {
+            config.ctHosts.forEach { +it }
+
+            // since it fails http traffic
+            failOnError = false
+            logger = object : Logger {
+                override fun log(host: String, result: VerificationResult) {
+                    if (result is VerificationResult.Success) {
+                        Log.i("AndroidNetworkManager", "ct: $host $result")
+                    } else {
+                        Log.w("AndroidNetworkManager", "ct: $host $result")
+                    }
+                }
+            }
+        }
 
         client = OkHttpClient.Builder()
                 .connectionPool(connectionPool)
@@ -45,14 +71,19 @@ class AndroidNetworkManager(private val application: Application,
                 .eventListenerFactory { NetworkHookEventListener(this, it, requestsLiveData) }
                 // TODO conditional / foreground / background
                 .pingInterval(3, TimeUnit.SECONDS)
-                .cookieJar(cookieJar)
-//                .apply {
-//                    if (AppSettings.Cache) {
+                .addNetworkInterceptor(ctIinterceptor)
+                .apply {
+                    if (config.cookieJar != null) {
+                        cookieJar(config.cookieJar)
+                    }
+                }
+                .apply {
+                    if (config.useCache) {
 //        addInterceptor(UseCacheOfflineInterceptor(this))
-//                        cache = Cache(context.cacheDir.resolve("http-cache"), CACHE_SIZE_BYTES)
-//                        cache(cache)
-//                    }
-//                }
+                        cache = Cache(context.cacheDir.resolve("http-cache"), CACHE_SIZE_BYTES)
+                        cache(cache)
+                    }
+                }
                 .build()
 
         availableNetworksLiveData.observeForever { t ->
@@ -60,12 +91,12 @@ class AndroidNetworkManager(private val application: Application,
 
             val droppedNetworkIds = networkConnectionMap.keys.toList().filterNot { availableNetworkIds.contains(it) }
 
-            Log.i("AndroidNetworkManager", "change networks available ${availableNetworkIds}")
-            Log.i("AndroidNetworkManager", "change networks connections ${networkConnectionMap}")
+            Log.i("AndroidNetworkManager", "change networks available $availableNetworkIds")
+            Log.i("AndroidNetworkManager", "change networks connections $networkConnectionMap")
 
             Log.i("AndroidNetworkManager", "dropping $droppedNetworkIds")
 
-            droppedNetworkIds.forEach {nid ->
+            droppedNetworkIds.forEach { nid ->
                 val connections = networkConnectionMap.remove(nid)
 
                 connections?.forEach {
@@ -84,8 +115,8 @@ class AndroidNetworkManager(private val application: Application,
     fun shutdown() {
         dispatcher.executorService().shutdown()
         connectionPool.evictAll()
-        cache.flush()
-        cache.close()
+        cache?.flush()
+        cache?.close()
     }
 
     fun createOkHttpClient() = client

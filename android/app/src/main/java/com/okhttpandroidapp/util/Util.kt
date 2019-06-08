@@ -1,4 +1,4 @@
-package com.okhttpandroidapp.factory
+package com.okhttpandroidapp.util
 
 import java.io.Closeable
 import java.net.Socket

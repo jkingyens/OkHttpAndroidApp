@@ -12,10 +12,18 @@ export default class App extends Component {
 
     render() {
         return <View style={{ flex: 1, flexDirection: 'column', padding: 10, spaceBetween: 10 }}>
-            <NetworkStateTable />
-            <ConnectionPoolStateTable />
-            <EventsTable />
-            <RequestsTable />
+            <View style={{ flex: 0.5 }}>
+                <NetworkStateTable />
+            </View>
+            <View style={{ flex: 0.5 }}>
+                <EventsTable />
+            </View>
+            <View style={{ flex: 1.0 }}>
+                <ConnectionPoolStateTable />
+            </View>
+            <View style={{ flex: 1.0 }}>
+                <RequestsTable />
+            </View>
         </View>;
     }
 }

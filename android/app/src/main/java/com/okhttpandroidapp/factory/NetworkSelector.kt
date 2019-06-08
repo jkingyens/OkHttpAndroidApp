@@ -1,5 +1,7 @@
 package com.okhttpandroidapp.factory
 
+import com.okhttpandroidapp.model.AvailableNetwork
+import com.okhttpandroidapp.model.NetworkType
 import okhttp3.HttpUrl
 
 interface NetworkSelector {

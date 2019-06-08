@@ -33,7 +33,7 @@ export default class ConnectionPoolStateTable extends Component {
 
     render() {
         if (this.state.isLoading) {
-            return <View style={{ flex: 1 }}>
+            return <View>
                     <Text style={{fontWeight: 'bold'}}>Connections</Text>
                     <Text>Loading...</Text>
                 </View>;

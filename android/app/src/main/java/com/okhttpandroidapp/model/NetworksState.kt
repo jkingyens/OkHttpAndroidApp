@@ -1,4 +1,4 @@
-package com.okhttpandroidapp.networks
+package com.okhttpandroidapp.model
 
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.WritableMap

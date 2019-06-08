@@ -1,5 +1,7 @@
 package com.okhttpandroidapp.networks
 
+import com.okhttpandroidapp.model.CallState
+import com.okhttpandroidapp.model.RequestsState
 import okhttp3.Call
 import okhttp3.Response
 import java.io.IOException

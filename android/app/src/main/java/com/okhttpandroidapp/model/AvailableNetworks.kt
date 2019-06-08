@@ -1,3 +1,3 @@
-package com.okhttpandroidapp.factory
+package com.okhttpandroidapp.model
 
 data class AvailableNetworks(val networks: List<AvailableNetwork>)
