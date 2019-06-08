@@ -3,7 +3,8 @@ package com.okhttpandroidapp.networks
 import android.Manifest
 import android.arch.lifecycle.LiveData
 import android.support.annotation.RequiresPermission
-import android.util.Log
+import com.okhttpandroidapp.model.ConnectionPoolState
+import com.okhttpandroidapp.model.ConnectionState
 import okhttp3.ConnectionPool
 import okhttp3.Route
 import okhttp3.internal.connection.RealConnection

@@ -5,6 +5,9 @@ import android.arch.lifecycle.LiveData
 import android.content.Context
 import android.net.*
 import android.support.annotation.RequiresPermission
+import com.okhttpandroidapp.model.NetworkEvent
+import com.okhttpandroidapp.model.NetworkState
+import com.okhttpandroidapp.model.NetworksState
 import org.apache.commons.lang3.StringUtils
 import java.net.InetAddress
 import java.net.NetworkInterface
@@ -35,9 +38,6 @@ constructor(application: Application)
 
             if (last != null && last != linkProperties) {
                 val diff = StringUtils.difference(last.toString(), linkProperties.toString())
-
-//            Log.w("NetworksLiveData", "OLD: " + last)
-//            Log.w("NetworksLiveData", "NEW: " + linkProperties)
 
                 show(NetworkEvent(network.toString(), "properties changed: $diff"))
             }

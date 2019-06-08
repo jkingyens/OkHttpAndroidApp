@@ -4,79 +4,78 @@ import android.app.Application
 import android.util.Log
 import com.facebook.react.ReactApplication
 import com.facebook.react.ReactNativeHost
-import com.facebook.react.ReactPackage
 import com.facebook.react.modules.network.OkHttpClientProvider
 import com.facebook.react.modules.network.ReactCookieJarContainer
-import com.facebook.react.shell.MainReactPackage
 import com.facebook.soloader.SoLoader
-import com.okhttpandroidapp.factory.AndroidNetworkManager
-import com.okhttpandroidapp.factory.NetworkHookEventListener
-import com.okhttpandroidapp.factory.NetworkSelector
+import com.okhttpandroidapp.android.PhoneStatusLiveData
+import com.okhttpandroidapp.factory.*
 import com.okhttpandroidapp.networks.ConnectionsLiveData
 import com.okhttpandroidapp.networks.NetworksLiveData
-import com.okhttpandroidapp.networks.NetworksPackage
+import com.okhttpandroidapp.reactnative.NetworksPackage
 import com.okhttpandroidapp.networks.RequestsLiveData
+import com.okhttpandroidapp.reactnative.AppReactNativeHost
 import com.okhttpandroidapp.reactnative.OptimisedNetworkModule
 import okhttp3.ConnectionPool
 import okhttp3.OkHttpClient
-import java.util.*
 import java.util.concurrent.TimeUnit
 
 @Suppress("unused")
 class MainApplication : Application(), ReactApplication {
-    private lateinit var requestsLiveData: RequestsLiveData
     private var androidNetworkManager: AndroidNetworkManager? = null
-    internal lateinit var connectionLiveData: ConnectionsLiveData
+
     internal lateinit var networksPackage: NetworksPackage
-    internal lateinit var customNetworkModule: OptimisedNetworkModule
-    internal lateinit var networksLiveData: NetworksLiveData
+    internal val mReactNativeHost = AppReactNativeHost(this)
 
-    private val mReactNativeHost = object : ReactNativeHost(this) {
-        override fun getUseDeveloperSupport(): Boolean {
-            return BuildConfig.DEBUG
-        }
-
-        override fun getPackages(): List<ReactPackage> {
-            return Arrays.asList(
-                    MainReactPackage(),
-                    networksPackage
-            )
-        }
-
-        override fun getJSMainModuleName(): String {
-            return "index"
-        }
-    }
+    val config = Config(
+            optimised = true,
+            useCache = false,
+            ctHosts = listOf(
+                    "*.babylonhealth.com",
+                    "*.facebook.com",
+                    "*.twitter.com",
+                    "httpbin.org",
+                    "nghttp2.org"),
+            cookieJar = ReactCookieJarContainer(),
+            conscrypt = false)
 
     override fun getReactNativeHost(): ReactNativeHost {
         return mReactNativeHost
     }
 
     override fun onCreate() {
-        networksLiveData = NetworksLiveData(this)
-        requestsLiveData = RequestsLiveData()
+        super.onCreate()
+        SoLoader.init(this, /* native exopackage */ false)
 
-        if (AppSettings.Optimised) {
+        if (config.optimised) {
             androidNetworkManager = AndroidNetworkManager(
                     this,
-                    NetworkSelector.WifiFirst,
-                    requestsLiveData
-            )
-            androidNetworkManager!!.initialise(this.applicationContext)
-            connectionLiveData = ConnectionsLiveData(androidNetworkManager!!.connectionPool)
+                    config,
+                    NetworkSelector.WifiFirst
+            ).apply {
+                initialise(applicationContext)
 
-            networksPackage = NetworksPackage(networksLiveData, connectionLiveData, requestsLiveData)
+                networksPackage = NetworksPackage(
+                        networksLiveData,
+                        connectionLiveData,
+                        requestsLiveData,
+                        phoneStatusLiveData)
 
-            Log.i("MainApplication", "setOkHttpClientFactory")
-            OkHttpClientProvider.setOkHttpClientFactory(OptimisedNetworkModule(androidNetworkManager!!))
+                Log.i("MainApplication", "setOkHttpClientFactory")
+                OkHttpClientProvider.setOkHttpClientFactory(OptimisedNetworkModule(this))
+            }
         } else {
             val connectionPool = ConnectionPool()
-            connectionLiveData = ConnectionsLiveData(connectionPool)
+            val connectionLiveData = ConnectionsLiveData(connectionPool)
 
-            networksPackage = NetworksPackage(networksLiveData, connectionLiveData, requestsLiveData)
+            val requestsLiveData = RequestsLiveData()
+
+            networksPackage = NetworksPackage(
+                    NetworksLiveData(this),
+                    connectionLiveData,
+                    requestsLiveData,
+                    PhoneStatusLiveData(this))
 
             OkHttpClientProvider.setOkHttpClientFactory {
-                Log.i("MainApplication", "createNewNetworkModuleClient")
                 OkHttpClient.Builder()
                         .connectionPool(connectionPool)
                         .connectTimeout(0, TimeUnit.MILLISECONDS)
@@ -88,8 +87,7 @@ class MainApplication : Application(), ReactApplication {
             }
         }
 
-        super.onCreate()
-        SoLoader.init(this, /* native exopackage */ false)
+        Log.i("NetworkStateModule", "Application onCreate")
     }
 
     override fun onTerminate() {
