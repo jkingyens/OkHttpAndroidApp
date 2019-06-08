@@ -78,8 +78,8 @@ class AndroidNetworkManager(private val application: Application,
                 }
                 .apply {
                     if (config.useCache) {
-//        addInterceptor(UseCacheOfflineInterceptor(this))
-                        cache = Cache(context.cacheDir.resolve("http-cache"), CACHE_SIZE_BYTES)
+                        addInterceptor(UseCacheOfflineInterceptor(this@AndroidNetworkManager))
+                        cache = Cache(context.cacheDir.resolve("http-cache"), config.cacheSize)
                         cache(cache)
                     }
                 }
@@ -174,8 +174,10 @@ class AndroidNetworkManager(private val application: Application,
         return listOf(Proxy.NO_PROXY)
     }
 
-    companion object {
-        const val CACHE_SIZE_BYTES = 1024 * 1024 * 64L
+    fun networkForCall(call: Call): String? {
+        // TODO confirm logic
+        val n = activeNetwork()
+        return n?.id
     }
 }
 

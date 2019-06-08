@@ -7,4 +7,5 @@ class Config(
         val useCache: Boolean = true,
         val ctHosts: List<String> = listOf(),
         val cookieJar: CookieJar? = null,
-        val conscrypt: Boolean = true)
+        val conscrypt: Boolean = true,
+        val cacheSize: Long = 1024 * 1024 * 64L)

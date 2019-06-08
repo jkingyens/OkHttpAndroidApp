@@ -29,15 +29,13 @@ class MainApplication : Application(), ReactApplication {
     internal val mReactNativeHost = AppReactNativeHost(this)
 
     val config = Config(
-            optimised = true,
             useCache = false,
             ctHosts = listOf(
                     "*.facebook.com",
                     "*.twitter.com",
                     "httpbin.org",
                     "nghttp2.org"),
-            cookieJar = ReactCookieJarContainer(),
-            conscrypt = true)
+            cookieJar = ReactCookieJarContainer())
 
     override fun getReactNativeHost(): ReactNativeHost {
         return mReactNativeHost

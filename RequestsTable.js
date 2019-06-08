@@ -22,9 +22,9 @@ export default class RequestsTable extends Component {
     }
 
     handleExecutePressed() {
-        return fetch(this.state.url);
+        return fetch(this.state.url)
             // .then((response) => { console.log(response.text()); })
-            // .catch((error) => { console.log(error); });
+            .catch((error) => { console.log(error); });
     }
 
     componentDidMount() {
@@ -44,7 +44,7 @@ export default class RequestsTable extends Component {
             <FlatList
                 ref="flatList"
                 data={this.state.requests}
-                renderItem={({ item }) => <Text>{item.id} {item.url} {item.result} {item.exception}</Text>}
+                renderItem={({ item }) => <Text>{item.id} {item.network} {item.url} {item.source} {item.result} {item.exception}</Text>}
                 keyExtractor={({ id }, index) => id}
                 onContentSizeChange={(contentWidth, contentHeight) => {
                     this.refs.flatList.scrollToEnd({ animated: true });

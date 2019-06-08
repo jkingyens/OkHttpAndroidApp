@@ -14,10 +14,10 @@ import com.okhttpandroidapp.networks.NetworksLiveData
 import com.okhttpandroidapp.networks.RequestsLiveData
 
 class NetworkStateModule(reactContext: ReactApplicationContext,
-                         val networksLiveData: NetworksLiveData,
                          val connectionsLiveData: ConnectionsLiveData,
-                         val requestsLiveData: RequestsLiveData,
-                         val phoneStatusLiveData: PhoneStatusLiveData)
+                         val networksLiveData: NetworksLiveData,
+                         val phoneStatusLiveData: PhoneStatusLiveData,
+                         val requestsLiveData: RequestsLiveData)
     : ReactContextBaseJavaModule(reactContext) {
 
     @ReactMethod
@@ -79,9 +79,7 @@ class NetworkStateModule(reactContext: ReactApplicationContext,
     }
 
     private fun publishEvent(reactContext: ReactApplicationContext, state: PhoneStatus) {
-        val event = "phoneStatusChanged"
-        val data = state.toMap()
-        emit(reactContext, event, data)
+        emit(reactContext, "phoneStatusChanged", state.toMap())
     }
 
     private fun emit(reactContext: ReactApplicationContext, event: String, data: WritableMap) {

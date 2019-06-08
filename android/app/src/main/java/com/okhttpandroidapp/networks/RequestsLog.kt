@@ -10,23 +10,6 @@ class RequestsLog() {
     private val requestMap = mutableMapOf<Int, CallState>()
     private var requestId = 0
 
-//    fun toMap(): WritableMap? {
-//        val result = Arguments.createMap()
-//
-//        val requestsArray = Arguments.createArray()
-//
-//        synchronized(requestMap) {
-//            val values = requestMap.values.sortedBy { it.id }
-//            values.forEach {
-//                requestsArray.pushMap(it.toMap())
-//            }
-//        }
-//
-//        result.putArray("requests", requestsArray)
-//
-//        return result
-//    }
-
     fun start(call: Call) {
         getCallState(call)
     }
@@ -48,9 +31,9 @@ class RequestsLog() {
     fun end(call: Call) {
     }
 
-    fun callSucceeded(call: Call, response: Response) {
+    fun callSucceeded(call: Call, response: Response, network: String? = null) {
         updateCallState(call) {
-            it.copy(result = response.code())
+            it.copy(result = response.code(), cached = response.cacheResponse() != null, network = network)
         }
     }
 

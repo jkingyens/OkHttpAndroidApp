@@ -24,10 +24,10 @@ class NetworksPackage(val networksLiveData: NetworksLiveData,
     override fun createNativeModules(
             reactContext: ReactApplicationContext): List<NativeModule> {
         stateModule = NetworkStateModule(reactContext,
-                networksLiveData,
                 connectionsLiveData,
-                requestsLiveData,
-                phoneStatusLiveData
+                networksLiveData,
+                phoneStatusLiveData,
+                requestsLiveData
         )
         if (activity != null) {
             stateModule.startListeners(activity!!)

@@ -55,7 +55,7 @@ export default class ConnectionPoolStateTable extends Component {
 
     renderConnection(item) {
         return <Text>
-            {item.id} {item.destHost} {item.proxy} {item.host} {item.localAddress} {item.protocol} {item.tlsVersion} {item.noNewStreams ? "NNS" : ""}
+            {item.id} {item.host} N:{item.network} {item.destHost} {item.protocol} {item.tlsVersion} {item.noNewStreams ? "NNS" : ""} S:{item.successCount} {item.proxy}
         </Text>;
     }
 }

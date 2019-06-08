@@ -21,8 +21,8 @@ class RequestsLiveData : LiveData<RequestsState>() {
         postValue(log.requests())
     }
 
-    fun callSucceeded(call: Call, response: Response) {
-        log.callSucceeded(call, response)
+    fun callSucceeded(call: Call, response: Response, network: String?) {
+        log.callSucceeded(call, response, network = network)
 
         postValue(log.requests())
     }

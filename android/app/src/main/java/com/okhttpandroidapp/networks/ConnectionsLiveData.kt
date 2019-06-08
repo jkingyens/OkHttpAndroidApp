@@ -8,6 +8,7 @@ import com.okhttpandroidapp.model.ConnectionState
 import okhttp3.ConnectionPool
 import okhttp3.Route
 import okhttp3.internal.connection.RealConnection
+import java.net.Proxy
 import java.net.Socket
 import java.util.*
 import kotlin.concurrent.timer
@@ -48,15 +49,20 @@ constructor(val connectionPool: ConnectionPool)
     private fun listConnections(): List<ConnectionState> {
         val connections: Collection<RealConnection> = connectionsProperty.get(connectionPool)
 
-        return connections.map { toConnectionState(it) }
+        return connections.map { it.toConnectionState() }
     }
 
-    private fun toConnectionState(it: RealConnection): ConnectionState {
-        val r = it.route()
-        val s = it.socket()
+    private fun RealConnection.toConnectionState(): ConnectionState {
+        val r = route()
+        val s = socket()
+        // TODO fix
+        val network = "-1"
+        val proxy = r.proxy()
         return ConnectionState(id(s), remoteIp(r), r.socketAddress().port,
-                r.proxy().toString(), r.address().url().host(), s.localAddress.hostAddress,
-                it.protocol(), it.noNewStreams, it.handshake()?.tlsVersion(), it.successCount)
+                if (proxy != Proxy.NO_PROXY) proxy.toString() else null,
+                r.address().url().host(), s.localAddress.hostAddress,
+                protocol(), noNewStreams, handshake()?.tlsVersion(), successCount,
+                network)
     }
 
     private fun id(s: Socket): String {

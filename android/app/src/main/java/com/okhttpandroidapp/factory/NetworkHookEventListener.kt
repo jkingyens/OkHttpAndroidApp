@@ -25,7 +25,8 @@ class NetworkHookEventListener(val androidNetworkManager: AndroidNetworkManager?
     }
 
     override fun responseHeadersEnd(call: Call, response: Response) {
-        requestsLiveData.callSucceeded(call, response)
+        val network = androidNetworkManager?.networkForCall(call)
+        requestsLiveData.callSucceeded(call, response, network)
     }
 
     override fun callFailed(call: Call, ioe: IOException) {
