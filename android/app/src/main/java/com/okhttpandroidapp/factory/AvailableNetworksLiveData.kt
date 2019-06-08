@@ -5,7 +5,6 @@ import android.arch.lifecycle.LiveData
 import android.content.Context
 import android.net.*
 import android.net.wifi.WifiManager
-import android.util.Log
 import com.okhttpandroidapp.model.AvailableNetwork
 import com.okhttpandroidapp.model.AvailableNetworks
 import com.okhttpandroidapp.model.NetworkStatus
@@ -58,7 +57,6 @@ class AvailableNetworksLiveData(val application: Application): LiveData<Availabl
 
     private fun postUpdate() {
         val n = AvailableNetworks(availableNetworks.values.toList())
-        Log.i("AvailableNetworksLiveData", "available networks: $n")
         postValue(n)
     }
 

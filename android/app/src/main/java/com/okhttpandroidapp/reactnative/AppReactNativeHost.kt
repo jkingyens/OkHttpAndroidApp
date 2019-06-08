@@ -1,6 +1,5 @@
 package com.okhttpandroidapp.reactnative
 
-import android.util.Log
 import com.facebook.react.ReactNativeHost
 import com.facebook.react.ReactPackage
 import com.facebook.react.shell.MainReactPackage
@@ -13,8 +12,6 @@ class AppReactNativeHost(val application: MainApplication) : ReactNativeHost(app
     }
 
     override fun getPackages(): List<ReactPackage> {
-        Log.i("NetworkStateModule", "host getPackages")
-
         return listOf(
                 MainReactPackage(),
                 application.networksPackage

@@ -2,7 +2,6 @@ package com.okhttpandroidapp.reactnative
 
 import android.arch.lifecycle.LifecycleOwner
 import android.arch.lifecycle.Observer
-import android.util.Log
 import com.facebook.react.bridge.*
 import com.facebook.react.modules.core.DeviceEventManagerModule
 import com.okhttpandroidapp.android.PhoneStatusLiveData
@@ -19,7 +18,7 @@ class NetworkStateModule(reactContext: ReactApplicationContext,
                          val connectionsLiveData: ConnectionsLiveData,
                          val requestsLiveData: RequestsLiveData,
                          val phoneStatusLiveData: PhoneStatusLiveData)
-    : ReactContextBaseJavaModule(reactContext), LifecycleEventListener {
+    : ReactContextBaseJavaModule(reactContext) {
 
     @ReactMethod
     fun getNetworks(promise: Promise) {
@@ -39,23 +38,6 @@ class NetworkStateModule(reactContext: ReactApplicationContext,
     @ReactMethod
     fun getPhoneStatus(promise: Promise) {
         promise.resolve(phoneStatusLiveData.getPhoneStatus())
-    }
-
-    override fun initialize() {
-        super.initialize()
-//        reactApplicationContext.addLifecycleEventListener(this)
-
-        Log.i("NetworkStateModule", "initialize")
-    }
-
-    override fun onHostResume() {
-        Log.i("NetworkStateModule", "onHostResume")
-    }
-
-    override fun onHostDestroy() {
-    }
-
-    override fun onHostPause() {
     }
 
     fun startListeners(lifecycleOwner: LifecycleOwner) {
@@ -103,6 +85,7 @@ class NetworkStateModule(reactContext: ReactApplicationContext,
     }
 
     private fun emit(reactContext: ReactApplicationContext, event: String, data: WritableMap) {
+        // TODO unravel this ordering
         if (reactContext.hasActiveCatalystInstance()) {
             reactContext
                     .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)

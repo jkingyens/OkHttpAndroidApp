@@ -1,19 +1,21 @@
 package com.okhttpandroidapp
 
 import android.app.Application
-import android.util.Log
 import com.facebook.react.ReactApplication
 import com.facebook.react.ReactNativeHost
 import com.facebook.react.modules.network.OkHttpClientProvider
 import com.facebook.react.modules.network.ReactCookieJarContainer
 import com.facebook.soloader.SoLoader
 import com.okhttpandroidapp.android.PhoneStatusLiveData
-import com.okhttpandroidapp.factory.*
+import com.okhttpandroidapp.factory.AndroidNetworkManager
+import com.okhttpandroidapp.factory.Config
+import com.okhttpandroidapp.factory.NetworkHookEventListener
+import com.okhttpandroidapp.factory.NetworkSelector
 import com.okhttpandroidapp.networks.ConnectionsLiveData
 import com.okhttpandroidapp.networks.NetworksLiveData
-import com.okhttpandroidapp.reactnative.NetworksPackage
 import com.okhttpandroidapp.networks.RequestsLiveData
 import com.okhttpandroidapp.reactnative.AppReactNativeHost
+import com.okhttpandroidapp.reactnative.NetworksPackage
 import com.okhttpandroidapp.reactnative.OptimisedNetworkModule
 import okhttp3.ConnectionPool
 import okhttp3.OkHttpClient
@@ -30,22 +32,25 @@ class MainApplication : Application(), ReactApplication {
             optimised = true,
             useCache = false,
             ctHosts = listOf(
-                    "*.babylonhealth.com",
                     "*.facebook.com",
                     "*.twitter.com",
                     "httpbin.org",
                     "nghttp2.org"),
             cookieJar = ReactCookieJarContainer(),
-            conscrypt = false)
+            conscrypt = true)
 
     override fun getReactNativeHost(): ReactNativeHost {
         return mReactNativeHost
     }
 
     override fun onCreate() {
+        initializeNetworks()
+
         super.onCreate()
         SoLoader.init(this, /* native exopackage */ false)
+    }
 
+    private fun initializeNetworks() {
         if (config.optimised) {
             androidNetworkManager = AndroidNetworkManager(
                     this,
@@ -60,7 +65,6 @@ class MainApplication : Application(), ReactApplication {
                         requestsLiveData,
                         phoneStatusLiveData)
 
-                Log.i("MainApplication", "setOkHttpClientFactory")
                 OkHttpClientProvider.setOkHttpClientFactory(OptimisedNetworkModule(this))
             }
         } else {
@@ -86,8 +90,6 @@ class MainApplication : Application(), ReactApplication {
                         .build()
             }
         }
-
-        Log.i("NetworkStateModule", "Application onCreate")
     }
 
     override fun onTerminate() {

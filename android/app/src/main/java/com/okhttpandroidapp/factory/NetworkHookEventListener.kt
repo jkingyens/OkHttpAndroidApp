@@ -1,10 +1,11 @@
 package com.okhttpandroidapp.factory
 
 import com.okhttpandroidapp.networks.RequestsLiveData
-import okhttp3.*
+import okhttp3.Call
+import okhttp3.Connection
+import okhttp3.EventListener
+import okhttp3.Response
 import java.io.IOException
-import java.net.InetSocketAddress
-import java.net.Proxy
 
 class NetworkHookEventListener(val androidNetworkManager: AndroidNetworkManager?, val call: Call,
                                val requestsLiveData: RequestsLiveData)

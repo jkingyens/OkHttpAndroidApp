@@ -7,7 +7,6 @@ import android.util.Log
 import com.babylon.certificatetransparency.Logger
 import com.babylon.certificatetransparency.VerificationResult
 import com.babylon.certificatetransparency.certificateTransparencyInterceptor
-import com.facebook.react.modules.network.ReactCookieJarContainer
 import com.okhttpandroidapp.android.PhoneStatusLiveData
 import com.okhttpandroidapp.android.initConscrypt
 import com.okhttpandroidapp.networks.ConnectionsLiveData
@@ -91,11 +90,6 @@ class AndroidNetworkManager(private val application: Application,
 
             val droppedNetworkIds = networkConnectionMap.keys.toList().filterNot { availableNetworkIds.contains(it) }
 
-            Log.i("AndroidNetworkManager", "change networks available $availableNetworkIds")
-            Log.i("AndroidNetworkManager", "change networks connections $networkConnectionMap")
-
-            Log.i("AndroidNetworkManager", "dropping $droppedNetworkIds")
-
             droppedNetworkIds.forEach { nid ->
                 val connections = networkConnectionMap.remove(nid)
 
@@ -143,8 +137,6 @@ class AndroidNetworkManager(private val application: Application,
     fun isOfflineFor(url: HttpUrl): Boolean {
         val activeNetwork = activeNetwork()
 
-        Log.i("AndroidNetworkManager", "isOfflineFor $url $activeNetwork")
-
         return activeNetwork == null
     }
 
@@ -152,8 +144,6 @@ class AndroidNetworkManager(private val application: Application,
 
     fun lookupDns(hostname: String): List<InetAddress> {
         val n = activeNetwork()
-
-        Log.i("AndroidNetworkManager", "lookupDns $hostname $n")
 
         if (n != null) {
             return n.network.getAllByName(hostname).toList()
@@ -164,8 +154,6 @@ class AndroidNetworkManager(private val application: Application,
 
     fun connectionAcquired(call: Call, connection: Connection) {
         val n = activeNetwork()
-
-        Log.i("AndroidNetworkManager", "connectionAcquired ${call.request().url()} $n")
 
         if (n != null) {
             networkConnectionMap.computeIfAbsent(n.id) { mutableListOf() }.add(connection as RealConnection)

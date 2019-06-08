@@ -1,6 +1,5 @@
 package com.okhttpandroidapp.factory
 
-import android.util.Log
 import java.io.IOException
 import java.net.Proxy
 import java.net.ProxySelector

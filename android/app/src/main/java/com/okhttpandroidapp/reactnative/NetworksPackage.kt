@@ -36,6 +36,7 @@ class NetworksPackage(val networksLiveData: NetworksLiveData,
     }
 
     fun startListeners(mainActivity: MainActivity) {
+        // TODO unravel this catastrophe
         if (this::stateModule.isInitialized) {
             stateModule.startListeners(mainActivity)
         } else {

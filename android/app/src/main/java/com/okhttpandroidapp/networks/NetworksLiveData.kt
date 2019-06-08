@@ -57,8 +57,6 @@ constructor(application: Application)
             this.events.add(networkEvent)
         }
 
-        //        Log.w("NetworksLiveData", "" + networksState)
-
         postValue(networksState())
     }
 
