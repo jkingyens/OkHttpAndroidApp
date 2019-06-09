@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import {FlatList, StyleSheet, Text, View, Button, DeviceEventEmitter} from 'react-native';
+import Table from 'react-native-simple-table'
 import NetworkState from "./NetworkState";
 
 export default class ConnectionPoolStateTable extends Component {
@@ -39,23 +40,25 @@ export default class ConnectionPoolStateTable extends Component {
                 </View>;
         }
 
+        var columns = [
+            { title: 'Id', dataIndex: 'id', width: 30 },
+            { title: 'Host', dataIndex: 'host', width: 100 },
+            { title: 'Net', dataIndex: 'network', width: 30 },
+            { title: 'Prot', dataIndex: 'protocol' },
+            { title: 'TLS', dataIndex: 'tlsVersion' },
+            { title: 'Open', dataIndex: 'noNewStreams', width: 35 },
+            { title: 'Rqs', dataIndex: 'successCount', width: 30 },
+            { title: 'Dest', dataIndex: 'destHost', width: 110 },
+            { title: 'Proxy', dataIndex: 'proxy', width: 110 },
+          ];
+
         return <View style={{ flex: 1 }}>
             <Text>
             <Text style={{fontWeight: 'bold'}}>Connections</Text>
             {' '}
             <Text>Count: {this.state.connections.connectionsCount} Idle: {this.state.connections.idleConnectionsCount}</Text>
             </Text>
-            <FlatList
-                data={this.state.connections.connections}
-                renderItem={({item}) => this.renderConnection(item)}
-                keyExtractor={({id}, index) => id}
-            />
+            <Table columns={columns} dataSource={this.state.connections.connections} />
         </View>;
-    }
-
-    renderConnection(item) {
-        return <Text>
-            {item.id} {item.host} N:{item.network} {item.destHost} {item.protocol} {item.tlsVersion} {item.noNewStreams ? "NNS" : ""} S:{item.successCount} {item.proxy}
-        </Text>;
     }
 }

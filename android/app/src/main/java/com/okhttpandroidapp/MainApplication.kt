@@ -35,7 +35,8 @@ class MainApplication : Application(), ReactApplication {
                     "*.twitter.com",
                     "httpbin.org",
                     "nghttp2.org"),
-            cookieJar = ReactCookieJarContainer())
+            cookieJar = ReactCookieJarContainer(),
+            quicHosts = listOf("facebook.com"))
 
     override fun getReactNativeHost(): ReactNativeHost {
         return mReactNativeHost

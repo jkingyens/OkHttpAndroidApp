@@ -12,7 +12,7 @@ export default class App extends Component {
 
     render() {
         return <View style={{ flex: 1, flexDirection: 'column', padding: 10, spaceBetween: 10 }}>
-            <View style={{ flex: 0.5 }}>
+            <View style={{ flex: 0.6 }}>
                 <NetworkStateTable />
             </View>
             <View style={{ flex: 0.5 }}>

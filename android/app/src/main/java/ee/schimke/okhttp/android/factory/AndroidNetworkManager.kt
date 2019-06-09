@@ -11,12 +11,13 @@ import android.util.Log
 import com.babylon.certificatetransparency.Logger
 import com.babylon.certificatetransparency.VerificationResult
 import com.babylon.certificatetransparency.certificateTransparencyInterceptor
+import com.okhttpandroidapp.util.closeQuietly
 import ee.schimke.okhttp.android.android.PhoneStatusLiveData
 import ee.schimke.okhttp.android.android.initConscrypt
 import ee.schimke.okhttp.android.networks.ConnectionsLiveData
 import ee.schimke.okhttp.android.networks.NetworksLiveData
 import ee.schimke.okhttp.android.networks.RequestsLiveData
-import com.okhttpandroidapp.util.closeQuietly
+import ee.schimke.okhttp.android.quic.QuicInterceptor
 import okhttp3.*
 import okhttp3.internal.connection.RealConnection
 import java.net.*
@@ -43,6 +44,12 @@ class AndroidNetworkManager(private val application: Application,
     fun initialise(context: Context) {
         if (config.conscrypt) {
             initConscrypt()
+        }
+
+        if (config.quicHosts.isNotEmpty()) {
+            QuicInterceptor.install(context, dispatcher.executorService()) {
+                Log.i("AndroidNetworkManager", "TODO event")
+            }
         }
 
         val ctIinterceptor = certificateTransparencyInterceptor {
@@ -74,6 +81,7 @@ class AndroidNetworkManager(private val application: Application,
                 .eventListenerFactory { NetworkHookEventListener(this, it, requestsLiveData) }
                 // TODO conditional / foreground / background
                 .pingInterval(3, TimeUnit.SECONDS)
+                .addInterceptor(QuicInterceptor { config.quicHosts.contains(it.url().host()) })
                 .addNetworkInterceptor(ctIinterceptor)
                 .apply {
                     if (config.cookieJar != null) {

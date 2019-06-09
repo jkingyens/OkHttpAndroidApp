@@ -2,6 +2,7 @@ package com.okhttpandroidapp.reactnative
 
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.WritableMap
+import com.jakewharton.byteunits.BinaryByteUnit
 import ee.schimke.okhttp.android.model.*
 
 
@@ -50,7 +51,7 @@ fun ConnectionState.toMap(): WritableMap {
         }
         putString("localAddress", localAddress)
         putString("protocol", protocol.toString())
-        putBoolean("noNewStreams", noNewStreams)
+        putString("noNewStreams", if (noNewStreams) "❌" else "")
         if (tlsVersion != null) {
             putString("tlsVersion", tlsVersion.javaName())
         }
@@ -89,14 +90,17 @@ fun NetworksState.toMap(): WritableMap {
 
 fun NetworkState.toMap(): WritableMap {
     return Arguments.createMap().apply {
+        val downRate = if (downstreamKbps != null) BinaryByteUnit.format(downstreamKbps.toLong()) else ""
+        val upRate = if (upstreamKbps != null) BinaryByteUnit.format(upstreamKbps.toLong()) else ""
         putString("networkId", networkId)
         putString("name", name)
         putString("type", type)
-        putBoolean("connected", connected ?: false)
+        putString("connected", if (connected == true) "✅" else "❌")
         putString("state", state)
-        putInt("downstreamKbps", downstreamKbps ?: -1)
-        putInt("upstreamKbps", upstreamKbps ?: -1)
-        putBoolean("active", active)
+        putString("downstream", downRate)
+        putString("upstream", upRate)
+        putString("bandwidth", "$downRate/$upRate")
+        putString("active", if (active) "✅" else "")
         putString("localAddress", localAddress)
     }
 }

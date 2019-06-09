@@ -82,7 +82,7 @@ constructor(application: Application)
 
         return NetworkState(network.toString(), properties?.interfaceName
                 ?: "unknown", info?.typeName + "/" + info?.subtypeName, info?.isConnected,
-                name, capabilities?.linkDownstreamBandwidthKbps,
+                info?.detailedState.toString(), capabilities?.linkDownstreamBandwidthKbps,
                 capabilities?.linkUpstreamBandwidthKbps, active,
                 localAddress?.hostAddress)
     }

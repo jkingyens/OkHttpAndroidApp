@@ -8,4 +8,5 @@ class Config(
         val ctHosts: List<String> = listOf(),
         val cookieJar: CookieJar? = null,
         val conscrypt: Boolean = true,
-        val cacheSize: Long = 1024 * 1024 * 64L)
+        val cacheSize: Long = 1024 * 1024 * 64L,
+        val quicHosts: List<String> = listOf())

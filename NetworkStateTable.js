@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { FlatList, StyleSheet, Text, View, Button, DeviceEventEmitter } from 'react-native';
+import Table from 'react-native-simple-table'
 import NetworkState from "./NetworkState";
 
 export default class NetworkStateTable extends Component {
@@ -44,20 +45,24 @@ export default class NetworkStateTable extends Component {
     }
 
     render() {
-        return <View style={{ flex: 1 }}>
+        var columns = [
+            { title: 'Id', dataIndex: 'networkId', width: 30 },
+            { title: 'Name', dataIndex: 'name' },
+            { title: 'Type', dataIndex: 'type', width: 80 },
+            { title: 'Act', dataIndex: 'active', width: 25 },
+            { title: 'State', dataIndex: 'state', width: 100 },
+            { title: 'Rate', dataIndex: 'bandwidth', width: 100 },
+            { title: 'Address', dataIndex: 'localAddress', width: 100 },
+          ];
+
+        return <View style={{ flex: 1 }} >
             <Text>
                 <Text style={{fontWeight: 'bold'}}>Networks</Text>
                 <Text> {this.state.networks.length}</Text>
                 <Text> {this.state.phone.airplane}</Text>
                 <Text> {this.state.phone.powerSave}</Text>
             </Text>
-            <FlatList
-                data={this.state.networks}
-                renderItem={({ item }) => <Text>
-                    {item.networkId} {item.name} {item.active} {item.connected ? "Connected" : "Disconnected"} {item.type} {item.active ? "Active" : "Not Active"} {item.state} {item.localAddress}
-                </Text>}
-                keyExtractor={({ networkId }, index) => networkId}
-            />
+            <Table columns={columns} dataSource={this.state.networks} />
         </View>;
     }
 }
