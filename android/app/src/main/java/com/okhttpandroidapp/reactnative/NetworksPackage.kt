@@ -5,10 +5,10 @@ import com.facebook.react.bridge.NativeModule
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.uimanager.ViewManager
 import com.okhttpandroidapp.MainActivity
-import com.okhttpandroidapp.android.PhoneStatusLiveData
-import com.okhttpandroidapp.networks.ConnectionsLiveData
-import com.okhttpandroidapp.networks.NetworksLiveData
-import com.okhttpandroidapp.networks.RequestsLiveData
+import ee.schimke.okhttp.android.android.PhoneStatusLiveData
+import ee.schimke.okhttp.android.networks.ConnectionsLiveData
+import ee.schimke.okhttp.android.networks.NetworksLiveData
+import ee.schimke.okhttp.android.networks.RequestsLiveData
 
 class NetworksPackage(val networksLiveData: NetworksLiveData,
                       val connectionsLiveData: ConnectionsLiveData,

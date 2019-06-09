@@ -4,14 +4,14 @@ import android.arch.lifecycle.LifecycleOwner
 import android.arch.lifecycle.Observer
 import com.facebook.react.bridge.*
 import com.facebook.react.modules.core.DeviceEventManagerModule
-import com.okhttpandroidapp.android.PhoneStatusLiveData
-import com.okhttpandroidapp.model.ConnectionPoolState
-import com.okhttpandroidapp.model.NetworksState
-import com.okhttpandroidapp.model.PhoneStatus
-import com.okhttpandroidapp.model.RequestsState
-import com.okhttpandroidapp.networks.ConnectionsLiveData
-import com.okhttpandroidapp.networks.NetworksLiveData
-import com.okhttpandroidapp.networks.RequestsLiveData
+import ee.schimke.okhttp.android.android.PhoneStatusLiveData
+import ee.schimke.okhttp.android.model.ConnectionPoolState
+import ee.schimke.okhttp.android.model.NetworksState
+import ee.schimke.okhttp.android.model.PhoneStatus
+import ee.schimke.okhttp.android.model.RequestsState
+import ee.schimke.okhttp.android.networks.ConnectionsLiveData
+import ee.schimke.okhttp.android.networks.NetworksLiveData
+import ee.schimke.okhttp.android.networks.RequestsLiveData
 
 class NetworkStateModule(reactContext: ReactApplicationContext,
                          val connectionsLiveData: ConnectionsLiveData,
