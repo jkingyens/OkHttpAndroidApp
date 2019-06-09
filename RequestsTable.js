@@ -43,7 +43,7 @@ export default class RequestsTable extends Component {
             <FlatList
                 ref="flatList"
                 data={this.state.requests}
-                renderItem={({ item }) => <Text>{item.id} {item.network} {item.url} {item.source} {item.result} {item.exception}</Text>}
+                renderItem={({ item }) => <Text>{item.id} {item.network} {item.url} {item.protocol} {item.source} {item.result} {item.exception}</Text>}
                 keyExtractor={({ id }, index) => id}
                 onContentSizeChange={(contentWidth, contentHeight) => {
                     this.refs.flatList.scrollToEnd({ animated: true });

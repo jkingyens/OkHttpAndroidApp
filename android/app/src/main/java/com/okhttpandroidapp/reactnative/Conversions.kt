@@ -22,6 +22,9 @@ fun CallState.toMap(): WritableMap {
         if (exception != null) {
             putString("exception", exception)
         }
+        if (protocol != null) {
+            putString("protocol", protocol.toString())
+        }
     }
 }
 

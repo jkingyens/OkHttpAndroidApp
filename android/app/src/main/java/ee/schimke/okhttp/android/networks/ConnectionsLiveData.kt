@@ -3,6 +3,7 @@ package ee.schimke.okhttp.android.networks
 import android.Manifest
 import android.arch.lifecycle.LiveData
 import android.support.annotation.RequiresPermission
+import ee.schimke.okhttp.android.factory.listConnections
 import ee.schimke.okhttp.android.model.ConnectionPoolState
 import ee.schimke.okhttp.android.model.ConnectionState
 import okhttp3.ConnectionPool
@@ -40,16 +41,9 @@ constructor(val connectionPool: ConnectionPool)
     }
 
     fun readState(): ConnectionPoolState {
-        val connections = listConnections()
-        val newState = ConnectionPoolState(connectionPool.connectionCount(),
+        val connections = connectionPool.listConnections().map { it.toConnectionState() }
+        return ConnectionPoolState(connectionPool.connectionCount(),
                 connectionPool.idleConnectionCount(), connections)
-        return newState
-    }
-
-    private fun listConnections(): List<ConnectionState> {
-        val connections: Collection<RealConnection> = connectionsProperty.get(connectionPool)
-
-        return connections.map { it.toConnectionState() }
     }
 
     private fun RealConnection.toConnectionState(): ConnectionState {
@@ -84,14 +78,5 @@ constructor(val connectionPool: ConnectionPool)
 
     override fun onInactive() {
         activeTimer.cancel()
-    }
-
-    companion object {
-        @Suppress("UNCHECKED_CAST")
-        val connectionsProperty = (ConnectionPool::class.memberProperties
-                .find { it.name == "connections" }!!
-                as KProperty1<ConnectionPool, Deque<RealConnection>>).apply {
-            isAccessible = true
-        }
     }
 }

@@ -33,7 +33,7 @@ class RequestsLog() {
 
     fun callSucceeded(call: Call, response: Response, network: String? = null) {
         updateCallState(call) {
-            it.copy(result = response.code(), cached = response.cacheResponse() != null, network = network)
+            it.copy(result = response.code(), cached = response.cacheResponse() != null, network = network, protocol = response.protocol())
         }
     }
 

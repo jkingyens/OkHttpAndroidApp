@@ -1,4 +1,4 @@
-package com.okhttpandroidapp.util
+package ee.schimke.okhttp.android.util
 
 import java.io.Closeable
 import java.net.Socket

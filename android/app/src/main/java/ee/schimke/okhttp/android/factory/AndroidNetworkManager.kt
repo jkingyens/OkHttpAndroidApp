@@ -11,7 +11,7 @@ import android.util.Log
 import com.babylon.certificatetransparency.Logger
 import com.babylon.certificatetransparency.VerificationResult
 import com.babylon.certificatetransparency.certificateTransparencyInterceptor
-import com.okhttpandroidapp.util.closeQuietly
+import ee.schimke.okhttp.android.util.closeQuietly
 import ee.schimke.okhttp.android.android.PhoneStatusLiveData
 import ee.schimke.okhttp.android.android.initConscrypt
 import ee.schimke.okhttp.android.model.NetworkEvent
