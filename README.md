@@ -5,6 +5,8 @@ An Anatomically Correct Network Manager for OkHttp
 - Soft closes on network changes (airplane mode)
 - DNS, Proxy selected based on Network rules - not blended
 - API for selecting network to use for each connection (intranet -> Wifi/VPN, external -> Cell First, video -> Wifi only)
+- Corporate defaults e.g. App only available on (BigCorp Wifi)
+- Ship smart defaults e.g. Cellular for API usage, Wifi preferred for downloads.
 
 <img width="300" alt="image" src="https://user-images.githubusercontent.com/231923/58747212-efb6b980-845f-11e9-9337-063a3d873e0b.png">
 
@@ -14,5 +16,6 @@ TODO
 - Wire up client selection strategies
 - Allow overriding e.g. forcing a specific connection without disconnecting
 - Understand multipath TCP
-- Show stats somewhere
+- Show clean usage of stats e.g. how would you monitor this
 - publish a separate library
+- test with live different proxies
