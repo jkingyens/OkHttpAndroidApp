@@ -23,7 +23,6 @@ export default class RequestsTable extends Component {
 
     handleExecutePressed() {
         return fetch(this.state.url)
-            // .then((response) => { console.log(response.text()); })
             .catch((error) => { console.log(error); });
     }
 

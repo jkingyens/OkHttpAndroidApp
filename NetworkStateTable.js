@@ -7,26 +7,40 @@ export default class NetworkStateTable extends Component {
         super(props);
 
         this.state = {
-            networks: []
+            networks: [],
+            phone: {
+                airplane: "",
+                powerSave: ""
+            }
         }
 
-        this.onStateEvent = this.onStateEvent.bind(this);
+        this.onNetworkStateEvent = this.onNetworkStateEvent.bind(this);
+        this.onPhoneStateEvent = this.onPhoneStateEvent.bind(this);
     }
 
-    onStateEvent(networks) {
+    onNetworkStateEvent(networks) {
         this.setState({
             networks: networks.networks,
         }, () => { });
     }
 
-    componentDidMount() {
-        NetworkState.getNetworks().then(this.onStateEvent);
+    onPhoneStateEvent(phone) {
+        this.setState({
+            phone: phone,
+        }, () => { });
+    }
 
-        this.subscription = DeviceEventEmitter.addListener('networkStateChanged', this.onStateEvent);
+    componentDidMount() {
+        NetworkState.getNetworks().then(this.onNetworkStateEvent);
+        NetworkState.getPhoneStatus().then(this.onPhoneStateEvent);
+
+        this.subscription1 = DeviceEventEmitter.addListener('networkStateChanged', this.onNetworkStateEvent);
+        this.subscription2 = DeviceEventEmitter.addListener('phoneStatusChanged', this.onPhoneStateEvent);
     }
 
     componentWillUnmount() {
-        this.subscription.remove();
+        this.subscription1.remove();
+        this.subscription2.remove();
     }
 
     render() {
@@ -34,6 +48,8 @@ export default class NetworkStateTable extends Component {
             <Text>
                 <Text style={{fontWeight: 'bold'}}>Networks</Text>
                 <Text> {this.state.networks.length}</Text>
+                <Text> {this.state.phone.airplane}</Text>
+                <Text> {this.state.phone.powerSave}</Text>
             </Text>
             <FlatList
                 data={this.state.networks}

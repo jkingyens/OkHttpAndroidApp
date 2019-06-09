@@ -37,7 +37,7 @@ class NetworkStateModule(reactContext: ReactApplicationContext,
 
     @ReactMethod
     fun getPhoneStatus(promise: Promise) {
-        promise.resolve(phoneStatusLiveData.getPhoneStatus())
+        promise.resolve(phoneStatusLiveData.getPhoneStatus().toMap())
     }
 
     fun startListeners(lifecycleOwner: LifecycleOwner) {

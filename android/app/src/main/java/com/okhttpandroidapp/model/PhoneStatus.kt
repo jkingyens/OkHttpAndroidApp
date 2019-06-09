@@ -7,8 +7,8 @@ data class PhoneStatus(val powerSave: Boolean, val airplane: Boolean) {
     fun toMap(): WritableMap {
         val result = Arguments.createMap()
 
-        result.putBoolean("airplane", airplane)
-        result.putBoolean("powerSave", powerSave)
+        result.putString("airplane", if (airplane) "Airplane" else "")
+        result.putString("powerSave", if (powerSave) "Power Save" else "")
 
         return result
     }

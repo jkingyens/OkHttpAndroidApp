@@ -8,3 +8,11 @@ An Anatomically Correct Network Manager for OkHttp
 
 <img width="300" alt="image" src="https://user-images.githubusercontent.com/231923/58747212-efb6b980-845f-11e9-9337-063a3d873e0b.png">
 
+TODO
+
+- Correct/Complete network selection/detection
+- Wire up client selection strategies
+- Allow overriding e.g. forcing a specific connection without disconnecting
+- Understand multipath TCP
+- Show stats somewhere
+- publish a separate library
