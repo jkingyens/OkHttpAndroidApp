@@ -85,7 +85,8 @@ dependencies {
     implementation "com.google.android.gms:play-services-cronet:16.0.0"
     implementation 'com.jakewharton.byteunits:byteunits:0.9.1'
 
-    annotationProcessor "android.arch.lifecycle:compiler:1.1.1"
+//    annotationProcessor "android.arch.lifecycle:compiler:1.1.1"
+    implementation "androidx.lifecycle:lifecycle-common-java8:2.0.0"
 }
 
 // Run this once to be able to run the application with BUCK

@@ -14,6 +14,7 @@ import com.babylon.certificatetransparency.certificateTransparencyInterceptor
 import com.okhttpandroidapp.util.closeQuietly
 import ee.schimke.okhttp.android.android.PhoneStatusLiveData
 import ee.schimke.okhttp.android.android.initConscrypt
+import ee.schimke.okhttp.android.model.NetworkEvent
 import ee.schimke.okhttp.android.networks.ConnectionsLiveData
 import ee.schimke.okhttp.android.networks.NetworksLiveData
 import ee.schimke.okhttp.android.networks.RequestsLiveData
@@ -48,7 +49,7 @@ class AndroidNetworkManager(private val application: Application,
 
         if (config.quicHosts.isNotEmpty()) {
             QuicInterceptor.install(context, dispatcher.executorService()) {
-                Log.i("AndroidNetworkManager", "TODO event")
+                networksLiveData.show(NetworkEvent(null, "Quic installed"))
             }
         }
 
@@ -69,6 +70,7 @@ class AndroidNetworkManager(private val application: Application,
         }
 
         client = OkHttpClient.Builder()
+                .protocols(listOf(Protocol.QUIC, Protocol.HTTP_2, Protocol.HTTP_1_1))
                 .connectionPool(connectionPool)
                 .dispatcher(dispatcher)
                 .dns(dns)
@@ -120,14 +122,18 @@ class AndroidNetworkManager(private val application: Application,
         ProcessLifecycleOwner.get().lifecycle.addObserver(object : LifecycleObserver {
             @OnLifecycleEvent(Lifecycle.Event.ON_START)
             fun onMoveToForeground() {
-                Log.w("AndroidNetworkManager", "Returning to foreground…")
+                publishPhoneEvent("Foreground")
             }
 
             @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
             fun onMoveToBackground() {
-                Log.w("AndroidNetworkManager", "Moving to background…")
+                publishPhoneEvent("Background")
             }
         })
+    }
+
+    private fun publishPhoneEvent(msg: String) {
+        networksLiveData.show(NetworkEvent(null, msg))
     }
 
     fun shutdown() {
@@ -141,8 +147,6 @@ class AndroidNetworkManager(private val application: Application,
 
     fun selectLocalSocketAddress(s: Socket) {
         val n = activeNetwork()
-
-        Log.i("AndroidNetworkManager", "selectLocalSocketAddress $n")
 
         if (n != null) {
             n.network.bindSocket(s)
