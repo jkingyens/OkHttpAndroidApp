@@ -7,7 +7,9 @@ import com.google.android.gms.net.CronetProviderInstaller
 import com.google.android.gms.tasks.Task
 import ee.schimke.okhttp.android.factory.Config
 import okhttp3.*
+import okio.Buffer
 import org.chromium.net.CronetEngine
+import org.chromium.net.UploadDataProviders
 import java.io.IOException
 import java.lang.Exception
 import java.util.concurrent.ExecutionException
@@ -30,7 +32,21 @@ class QuicInterceptor(val quicFilter: (Request) -> Boolean) : Interceptor {
         val builder = cronetEngine.newUrlRequestBuilder(call.request().url().toString(), callback, executorService).apply {
             this.allowDirectExecutor()
             setHttpMethod(call.request().method())
-//            setUploadDataProvider()
+
+            val headers = call.request().headers()
+            for (i in 0 until headers.size()) {
+                addHeader(headers.name(i), headers.value(i))
+            }
+
+            call.request().body()?.let {
+                addHeader("Content-Type", it.contentType().toString())
+
+                // TODO stream
+                val buffer = Buffer()
+                call.request().body()?.writeTo(buffer)
+                val dataProvider = UploadDataProviders.create(buffer.readByteArray())
+                setUploadDataProvider(dataProvider, executorService)
+            }
         }
 
         val cReq = builder.build()
