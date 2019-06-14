@@ -48,7 +48,7 @@ class AndroidNetworkManager(private val application: Application,
         }
 
         if (config.quicHosts.isNotEmpty()) {
-            QuicInterceptor.install(context, dispatcher.executorService()) {
+            QuicInterceptor.install(context, dispatcher.executorService(), config = config) {
                 networksLiveData.show(NetworkEvent(null, "Quic installed"))
             }
         }

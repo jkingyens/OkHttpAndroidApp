@@ -27,4 +27,5 @@ val listenerProperty = realCallClass
     isAccessible = true
 }
 
-fun Call.eventListener() = listenerProperty.get(this) as okhttp3.EventListener
+val Call.eventListener
+    get() = listenerProperty.get(this) as okhttp3.EventListener
