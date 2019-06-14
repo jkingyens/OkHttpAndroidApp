@@ -71,15 +71,7 @@ class QuicInterceptor(val quicFilter: (Request) -> Boolean) : Interceptor {
             CronetProviderInstaller.installProvider(context).addOnCompleteListener {
                 Log.i("QuicInterceptor", "installed Quic")
 
-                executorService = Executors.newSingleThreadScheduledExecutor(ThreadFactory {
-                    Thread(Runnable {
-                        try {
-                            it.run()
-                        } catch (e: Exception) {
-                            Log.e("QuicInterceptor", "failed", e)
-                        }
-                    }, "cronet-1")
-                })
+                executorService = executor
 
                 val myBuilder = CronetEngine.Builder(context)
                 // Enable caching of HTTP data and
