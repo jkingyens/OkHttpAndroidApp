@@ -12,6 +12,7 @@ import ee.schimke.okhttp.android.android.AppForegroundStatusListener
 import ee.schimke.okhttp.android.android.PhoneStatusLiveData
 import ee.schimke.okhttp.android.android.initConscrypt
 import ee.schimke.okhttp.android.model.NetworkEvent
+import ee.schimke.okhttp.android.networks.AvailableNetworksLiveData
 import ee.schimke.okhttp.android.networks.ConnectionsLiveData
 import ee.schimke.okhttp.android.networks.NetworksLiveData
 import ee.schimke.okhttp.android.networks.RequestsLiveData
@@ -30,7 +31,7 @@ import java.util.concurrent.TimeUnit
 class AndroidNetworkManager(private val application: Application,
                             private val config: Config,
                             private val networkSelector: NetworkSelector) : AppForegroundStatusListener {
-    val connectionPool = ConnectionPool()
+    val connectionPool = ConnectionPool(10, 5, TimeUnit.MINUTES)
     val networksLiveData = NetworksLiveData(application)
     val requestsLiveData = RequestsLiveData()
     val phoneStatusLiveData = PhoneStatusLiveData(application)
@@ -40,6 +41,7 @@ class AndroidNetworkManager(private val application: Application,
     private lateinit var client: OkHttpClient
 
     private val networkConnectionMap = mutableMapOf<String, MutableList<RealConnection>>()
+    private val callNetworkMap = mutableMapOf<Call, String?>()
     private val dispatcher = Dispatcher()
     private val dns: Dns = AndroidDns(this)
     private var cache: Cache? = null
@@ -97,12 +99,7 @@ class AndroidNetworkManager(private val application: Application,
                 .build()
 
         client = if (config.doh) {
-            val dns = DnsOverHttps.Builder().client(baseClient)
-                    .url(HttpUrl.get("https://1.1.1.1/dns-query"))
-//                        .url(HttpUrl.get("https://cloudflare-dns.com/dns-query"))
-//                        .bootstrapDnsHosts(getByIp("1.1.1.1"))
-                    .includeIPv6(false)
-                    .build()
+            val dns = cloudflare(baseClient)
             baseClient.newBuilder().dns(dns).build()
         } else {
             baseClient
@@ -125,6 +122,11 @@ class AndroidNetworkManager(private val application: Application,
 
         AppForegroundStatus.addListener(this)
     }
+
+    private fun cloudflare(baseClient: OkHttpClient): DnsOverHttps =
+            DnsOverHttps.Builder().client(baseClient)
+                    .url(HttpUrl.get("https://1.1.1.1/dns-query"))
+                    .build()
 
     override fun onMoveToForeground() {
         publishPhoneEvent("Foreground")
@@ -191,6 +193,8 @@ class AndroidNetworkManager(private val application: Application,
 
     fun callStart(call: Call) {
         Log.i("AndroidNetworkManager", "callStart ${call.request().url()}")
+
+        callNetworkMap[call] = activeNetwork()?.id
     }
 
     fun callEnd(call: Call) {
@@ -198,9 +202,7 @@ class AndroidNetworkManager(private val application: Application,
     }
 
     fun isOfflineFor(url: HttpUrl): Boolean {
-        val activeNetwork = activeNetwork()
-
-        return activeNetwork == null
+        return activeNetwork() == null
     }
 
     private fun activeNetwork() = availableNetworksLiveData.value?.networks?.firstOrNull { it.connected }
@@ -216,10 +218,11 @@ class AndroidNetworkManager(private val application: Application,
     }
 
     fun connectionAcquired(call: Call, connection: Connection) {
-        val n = activeNetwork()
+        val nid = callNetworkMap[call]
 
-        if (n != null) {
-            networkConnectionMap.computeIfAbsent(n.id) { mutableListOf() }.add(connection as RealConnection)
+        if (nid != null) {
+            networkConnectionMap.computeIfAbsent(nid) { mutableListOf() }
+                    .add(connection as RealConnection)
         }
     }
 
@@ -238,9 +241,7 @@ class AndroidNetworkManager(private val application: Application,
     }
 
     fun networkForCall(call: Call): String? {
-        // TODO confirm logic
-        val n = activeNetwork()
-        return n?.id
+        return callNetworkMap[call]
     }
 }
 

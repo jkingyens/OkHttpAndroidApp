@@ -1,4 +1,4 @@
-package ee.schimke.okhttp.android.factory
+package ee.schimke.okhttp.android.networks
 
 import android.app.Application
 import android.arch.lifecycle.LiveData

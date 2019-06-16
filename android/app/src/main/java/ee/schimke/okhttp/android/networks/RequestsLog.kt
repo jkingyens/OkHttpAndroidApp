@@ -6,7 +6,7 @@ import okhttp3.Call
 import okhttp3.Response
 import java.io.IOException
 
-class RequestsLog() {
+class RequestsLog {
     private val requestMap = mutableMapOf<Int, CallState>()
     private var requestId = 0
 
