@@ -21,7 +21,6 @@ import okhttp3.ConnectionPool
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
 
-@Suppress("unused")
 class MainApplication : Application(), ReactApplication {
     private var androidNetworkManager: AndroidNetworkManager? = null
 
@@ -33,10 +32,11 @@ class MainApplication : Application(), ReactApplication {
             ctHosts = listOf(
                     "*.facebook.com",
                     "*.twitter.com",
+                    "*.google.com",
                     "httpbin.org",
                     "nghttp2.org"),
-            cookieJar = ReactCookieJarContainer(),
-            quicHosts = listOf("facebook.com", "google.com", "www.google.com"))
+            quicHosts = listOf("google.com", "www.google.com"),
+            warmedConnections = listOf("facebook.com", "twitter.com", "api.twitter.com", "graph.facebook.com", "httpbin.org", "nghttp2.org"))
 
     override fun getReactNativeHost(): ReactNativeHost {
         return mReactNativeHost

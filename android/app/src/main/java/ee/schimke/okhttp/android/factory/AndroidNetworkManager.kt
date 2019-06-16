@@ -1,17 +1,14 @@
 package ee.schimke.okhttp.android.factory
 
 import android.app.Application
-import android.arch.lifecycle.Lifecycle
-import android.arch.lifecycle.LifecycleObserver
-import android.arch.lifecycle.OnLifecycleEvent
-import android.arch.lifecycle.ProcessLifecycleOwner
 import android.content.Context
 import android.net.ProxyInfo
 import android.util.Log
 import com.babylon.certificatetransparency.Logger
 import com.babylon.certificatetransparency.VerificationResult
 import com.babylon.certificatetransparency.certificateTransparencyInterceptor
-import ee.schimke.okhttp.android.util.closeQuietly
+import ee.schimke.okhttp.android.android.AppForegroundStatus
+import ee.schimke.okhttp.android.android.AppForegroundStatusListener
 import ee.schimke.okhttp.android.android.PhoneStatusLiveData
 import ee.schimke.okhttp.android.android.initConscrypt
 import ee.schimke.okhttp.android.model.NetworkEvent
@@ -19,14 +16,19 @@ import ee.schimke.okhttp.android.networks.ConnectionsLiveData
 import ee.schimke.okhttp.android.networks.NetworksLiveData
 import ee.schimke.okhttp.android.networks.RequestsLiveData
 import ee.schimke.okhttp.android.quic.QuicInterceptor
+import ee.schimke.okhttp.android.util.closeQuietly
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import okhttp3.*
 import okhttp3.internal.connection.RealConnection
+import java.io.IOException
 import java.net.*
 import java.util.concurrent.TimeUnit
 
 class AndroidNetworkManager(private val application: Application,
                             private val config: Config,
-                            private val networkSelector: NetworkSelector) {
+                            private val networkSelector: NetworkSelector) : AppForegroundStatusListener {
     val connectionPool = ConnectionPool()
     val networksLiveData = NetworksLiveData(application)
     val requestsLiveData = RequestsLiveData()
@@ -36,7 +38,6 @@ class AndroidNetworkManager(private val application: Application,
 
     private lateinit var client: OkHttpClient
 
-    private val networkSocketMap = mutableMapOf<String, MutableList<Socket>>()
     private val networkConnectionMap = mutableMapOf<String, MutableList<RealConnection>>()
     private val dispatcher = Dispatcher()
     private val dns: Dns = AndroidDns(this)
@@ -86,11 +87,6 @@ class AndroidNetworkManager(private val application: Application,
                 .addInterceptor(QuicInterceptor { config.quicHosts.contains(it.url().host()) })
                 .addNetworkInterceptor(ctIinterceptor)
                 .apply {
-                    if (config.cookieJar != null) {
-                        cookieJar(config.cookieJar)
-                    }
-                }
-                .apply {
                     if (config.useCache) {
                         addInterceptor(UseCacheOfflineInterceptor(this@AndroidNetworkManager))
                         cache = Cache(context.cacheDir.resolve("http-cache"), config.cacheSize)
@@ -109,30 +105,57 @@ class AndroidNetworkManager(private val application: Application,
 
                 connections?.forEach {
                     it.noNewStreams = true
-                }
-
-                val sockets = networkSocketMap.remove(nid)
-
-                sockets?.forEach {
-                    it.closeQuietly()
+                    it.socket().closeQuietly()
                 }
             }
         }
 
-        ProcessLifecycleOwner.get().lifecycle.addObserver(object : LifecycleObserver {
-            @OnLifecycleEvent(Lifecycle.Event.ON_START)
-            fun onMoveToForeground() {
-                publishPhoneEvent("Foreground")
-            }
-
-            @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
-            fun onMoveToBackground() {
-                publishPhoneEvent("Background")
-            }
-        })
+        AppForegroundStatus.addListener(this)
     }
 
+    override fun onMoveToForeground() {
+        publishPhoneEvent("Foreground")
+
+        if (config.warmedConnections.isNotEmpty()) {
+            startConnections(config.warmedConnections)
+        }
+    }
+
+    private fun startConnections(warmedConnections: List<String>) {
+        GlobalScope.launch(Dispatchers.IO) {
+            warmedConnections.forEach {
+                val req = Request.Builder().url("https://$it/robots.txt").cacheControl(CacheControl.FORCE_NETWORK).build()
+                client.newCall(req).enqueue(object : Callback {
+                    override fun onFailure(call: Call, e: IOException) {
+                    }
+
+                    override fun onResponse(call: Call, response: Response) {
+                        response.close()
+                    }
+                })
+            }
+        }
+    }
+
+    override fun onMoveToBackground() {
+        publishPhoneEvent("Background")
+
+        if (config.closeInBackground) {
+            networkConnectionMap.connections().forEach {
+                it.noNewStreams = true
+            }
+
+            // TODO private val mainScope = MainScope()?
+            GlobalScope.launch(Dispatchers.IO) {
+                client.connectionPool().evictAll()
+            }
+        }
+    }
+
+    private fun Map<*, List<RealConnection>>.connections() = this.values.asSequence().flatMap { it.asSequence() }
+
     private fun publishPhoneEvent(msg: String) {
+        Log.i("AndroidNetworkManager", msg)
         networksLiveData.show(NetworkEvent(null, msg))
     }
 
@@ -150,7 +173,6 @@ class AndroidNetworkManager(private val application: Application,
 
         if (n != null) {
             n.network.bindSocket(s)
-            networkSocketMap.computeIfAbsent(n.id) { mutableListOf() }.add(s)
         }
     }
 
