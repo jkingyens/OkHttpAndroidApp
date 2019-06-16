@@ -21,6 +21,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import okhttp3.*
+import okhttp3.dnsoverhttps.DnsOverHttps
 import okhttp3.internal.connection.RealConnection
 import java.io.IOException
 import java.net.*
@@ -70,7 +71,7 @@ class AndroidNetworkManager(private val application: Application,
             }
         }
 
-        client = OkHttpClient.Builder()
+        val baseClient = OkHttpClient.Builder()
                 .protocols(listOf(Protocol.QUIC, Protocol.HTTP_2, Protocol.HTTP_1_1))
                 .connectionPool(connectionPool)
                 .dispatcher(dispatcher)
@@ -95,6 +96,18 @@ class AndroidNetworkManager(private val application: Application,
                 }
                 .build()
 
+        client = if (config.doh) {
+            val dns = DnsOverHttps.Builder().client(baseClient)
+                    .url(HttpUrl.get("https://1.1.1.1/dns-query"))
+//                        .url(HttpUrl.get("https://cloudflare-dns.com/dns-query"))
+//                        .bootstrapDnsHosts(getByIp("1.1.1.1"))
+                    .includeIPv6(false)
+                    .build()
+            baseClient.newBuilder().dns(dns).build()
+        } else {
+            baseClient
+        }
+
         availableNetworksLiveData.observeForever { t ->
             val availableNetworkIds = t?.networks?.filter { it.connected }?.map { it.id }.orEmpty()
 
@@ -104,7 +117,7 @@ class AndroidNetworkManager(private val application: Application,
                 val connections = networkConnectionMap.remove(nid)
 
                 connections?.forEach {
-                    it.noNewStreams = true
+                    it.noNewExchanges()
                     it.socket().closeQuietly()
                 }
             }
@@ -142,7 +155,7 @@ class AndroidNetworkManager(private val application: Application,
 
         if (config.closeInBackground) {
             networkConnectionMap.connections().forEach {
-                it.noNewStreams = true
+                it.noNewExchanges()
             }
 
             // TODO private val mainScope = MainScope()?

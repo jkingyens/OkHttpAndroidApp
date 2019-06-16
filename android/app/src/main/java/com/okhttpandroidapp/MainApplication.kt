@@ -36,7 +36,8 @@ class MainApplication : Application(), ReactApplication {
                     "httpbin.org",
                     "nghttp2.org"),
             quicHosts = listOf("google.com", "www.google.com"),
-            warmedConnections = listOf("facebook.com", "twitter.com", "api.twitter.com", "graph.facebook.com", "httpbin.org", "nghttp2.org"))
+            warmedConnections = listOf("facebook.com", "twitter.com", "api.twitter.com", "graph.facebook.com", "httpbin.org", "nghttp2.org"),
+            doh = true)
 
     override fun getReactNativeHost(): ReactNativeHost {
         return mReactNativeHost

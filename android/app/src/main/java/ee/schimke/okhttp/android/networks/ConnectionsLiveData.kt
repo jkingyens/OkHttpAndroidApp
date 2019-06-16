@@ -4,6 +4,8 @@ import android.Manifest
 import android.arch.lifecycle.LiveData
 import android.support.annotation.RequiresPermission
 import ee.schimke.okhttp.android.factory.listConnections
+import ee.schimke.okhttp.android.factory.noNewExchangesF
+import ee.schimke.okhttp.android.factory.successCountF
 import ee.schimke.okhttp.android.model.ConnectionPoolState
 import ee.schimke.okhttp.android.model.ConnectionState
 import okhttp3.ConnectionPool
@@ -55,7 +57,7 @@ constructor(val connectionPool: ConnectionPool)
         return ConnectionState(id(s), remoteIp(r), r.socketAddress().port,
                 if (proxy != Proxy.NO_PROXY) proxy.toString() else null,
                 r.address().url().host(), s.localAddress.hostAddress,
-                protocol(), noNewStreams, handshake()?.tlsVersion(), successCount,
+                protocol(), this.noNewExchangesF, handshake()?.tlsVersion(), this.successCountF,
                 network)
     }
 
