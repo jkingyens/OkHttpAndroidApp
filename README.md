@@ -12,7 +12,8 @@ Possible
 - Set handling for background/foreground connections
 - Batch network operations within app
 
-<img width="296" alt="image" src="https://user-images.githubusercontent.com/231923/59155710-99f99700-8a87-11e9-9096-1ee3e6da029f.png">
+<img width="369" alt="image" src="https://user-images.githubusercontent.com/231923/59565797-99e13480-904f-11e9-9e5c-260187731feb.png">
+
 
 TODO
 
@@ -23,7 +24,6 @@ TODO
 - Show clean usage of stats e.g. how would you monitor this
 - publish a separate library
 - test with live different proxies
-- Support down to Android 21+
 
 Experiments
 
