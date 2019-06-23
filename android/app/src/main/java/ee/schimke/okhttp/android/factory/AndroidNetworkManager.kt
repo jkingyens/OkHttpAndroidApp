@@ -6,10 +6,7 @@ import android.util.Log
 import com.babylon.certificatetransparency.Logger
 import com.babylon.certificatetransparency.VerificationResult
 import com.babylon.certificatetransparency.certificateTransparencyInterceptor
-import ee.schimke.okhttp.android.android.AppForegroundStatus
-import ee.schimke.okhttp.android.android.AppForegroundStatusListener
-import ee.schimke.okhttp.android.android.PhoneStatusLiveData
-import ee.schimke.okhttp.android.android.initConscrypt
+import ee.schimke.okhttp.android.android.*
 import ee.schimke.okhttp.android.model.AvailableNetwork
 import ee.schimke.okhttp.android.model.NetworkEvent
 import ee.schimke.okhttp.android.networks.AvailableNetworksLiveData
@@ -30,9 +27,6 @@ import java.net.Proxy
 import java.net.Socket
 import java.net.URI
 import java.util.concurrent.TimeUnit
-import android.support.v4.content.ContextCompat.getSystemService
-import android.os.PowerManager
-
 
 
 class AndroidNetworkManager(private val application: Application,
@@ -48,7 +42,7 @@ class AndroidNetworkManager(private val application: Application,
     private lateinit var client: OkHttpClient
 
     private val uriCallMap = mutableMapOf<String, Call>()
-    private val networkConnectionMap = mutableMapOf<String, MutableList<RealConnection>>()
+    private val networkConnectionMap = mutableMapOf<String, MutableSet<RealConnection>>()
     private val callNetworkMap = mutableMapOf<Call, String?>()
     private val dispatcher = Dispatcher()
     private val dns: Dns = AndroidDns(this)
@@ -57,6 +51,8 @@ class AndroidNetworkManager(private val application: Application,
     fun initialise(context: Context) {
         if (config.conscrypt) {
             initConscrypt()
+        } else if (config.gms) {
+            initGms(application)
         }
 
         if (config.quicHosts.isNotEmpty()) {
@@ -121,6 +117,8 @@ class AndroidNetworkManager(private val application: Application,
                 val connections = networkConnectionMap.remove(nid)
 
                 connections?.forEach {
+                    Log.i("AndroidNetworkManager", "soft closing ${it.route().socketAddress().hostString} due to network change")
+
                     it.noNewExchanges()
                     it.socket().closeQuietly()
                 }
@@ -129,7 +127,8 @@ class AndroidNetworkManager(private val application: Application,
 
         AppForegroundStatus.addListener(this)
 
-        // TODO more fine grained foreground/background power control
+        // TODO more fine grained foreground/background power control,
+        //  e.g. Apps running with active downloads
 //        val pm = getSystemService(application, PowerManager::class.java) as PowerManager
 //        val partialLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "okhttp:wakelock")
 //        partialLock.acquire(30000)
@@ -168,7 +167,9 @@ class AndroidNetworkManager(private val application: Application,
         publishPhoneEvent("Background")
 
         if (config.closeInBackground) {
+            Log.i("AndroidNetworkManager", "$networkConnectionMap")
             networkConnectionMap.connections().forEach {
+                Log.i("AndroidNetworkManager", "soft closing ${it.route().socketAddress().hostString} due to background")
                 it.noNewExchanges()
             }
 
@@ -179,7 +180,9 @@ class AndroidNetworkManager(private val application: Application,
         }
     }
 
-    private fun Map<*, List<RealConnection>>.connections() = this.values.asSequence().flatMap { it.asSequence() }
+    private fun Map<*, MutableSet<RealConnection>>.connections() = this.values.asSequence().flatMap {
+        it.asSequence()
+    }
 
     private fun publishPhoneEvent(msg: String) {
         Log.i("AndroidNetworkManager", msg)
@@ -261,7 +264,7 @@ class AndroidNetworkManager(private val application: Application,
         val nid = callNetworkMap[call]
 
         if (nid != null) {
-            networkConnectionMap.computeIfAbsent(nid) { mutableListOf() }
+            networkConnectionMap.computeIfAbsent(nid) { mutableSetOf() }
                     .add(connection as RealConnection)
         }
     }
@@ -300,7 +303,7 @@ class AndroidNetworkManager(private val application: Application,
         threadCall.set(call)
     }
 
-    fun unlinkCall(call: Call) {
+    fun unlinkCall() {
         threadCall.remove()
     }
 }

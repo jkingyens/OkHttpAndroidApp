@@ -9,6 +9,8 @@ import ee.schimke.okhttp.android.model.NetworkEvent
 import ee.schimke.okhttp.android.model.NetworkState
 import ee.schimke.okhttp.android.model.NetworksState
 import org.apache.commons.lang3.StringUtils
+import java.net.Inet4Address
+import java.net.Inet6Address
 import java.net.InetAddress
 import java.net.NetworkInterface
 
@@ -74,17 +76,13 @@ constructor(application: Application)
         val capabilities: NetworkCapabilities? = connectivityManager.getNetworkCapabilities(network)
         val properties: LinkProperties? = connectivityManager.getLinkProperties(network)
 
-        val name = info?.detailedState?.name
-        val localAddress: InetAddress? = when {
-            name != null -> NetworkInterface.getByName(name)?.inetAddresses?.toList()?.firstOrNull()
-            else -> null
-        }
+        val localAddress = properties?.linkAddresses?.minBy { it.address is Inet6Address }?.address.toString()
 
         return NetworkState(network.toString(), properties?.interfaceName
                 ?: "unknown", info?.typeName + "/" + info?.subtypeName, info?.isConnected,
                 info?.detailedState.toString(), capabilities?.linkDownstreamBandwidthKbps,
                 capabilities?.linkUpstreamBandwidthKbps, active,
-                localAddress?.hostAddress)
+                localAddress)
     }
 
     override fun onActive() {

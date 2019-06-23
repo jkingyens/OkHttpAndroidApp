@@ -27,7 +27,7 @@ class AvailableNetworksLiveData(val application: Application) : LiveData<Availab
                 availableNetworks[network.toString()] = availableNetwork
             }
 
-            Log.i("AndroidNetworkManager-anld", "onAvailable $network ${availableNetwork.type}")
+//            Log.i("AndroidNetworkManager-anld", "onAvailable $network ${availableNetwork.type}")
 
             postUpdate()
         }

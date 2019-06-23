@@ -45,6 +45,7 @@ class MainApplication : Application(), ReactApplication {
 
     val config = Config(
             conscrypt = false,
+            gms = false,
             useCache = false,
             ctHosts = listOf(
                     "*.facebook.com",

@@ -6,10 +6,14 @@ import okhttp3.EventListener
 import okhttp3.internal.connection.RealConnection
 import okhttp3.internal.connection.RealConnectionPool
 import okhttp3.internal.connection.Transmitter
+import okhttp3.internal.platform.Platform
 import java.util.*
 import kotlin.reflect.KClass
+import kotlin.reflect.KMutableProperty
+import kotlin.reflect.KMutableProperty0
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
+import kotlin.reflect.full.staticProperties
 import kotlin.reflect.jvm.isAccessible
 
 // ConnectionPool

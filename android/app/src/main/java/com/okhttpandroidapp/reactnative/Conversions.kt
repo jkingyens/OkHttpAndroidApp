@@ -59,7 +59,7 @@ fun ConnectionState.toMap(): WritableMap {
             putString("tlsVersion", tlsVersion.javaName())
         }
         putInt("successCount", successCount)
-        putString("network", network)
+        putString("network", networkId)
     }
 }
 

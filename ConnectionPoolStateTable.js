@@ -50,6 +50,7 @@ export default class ConnectionPoolStateTable extends Component {
             { title: 'Rqs', dataIndex: 'successCount', width: 30 },
             { title: 'Dest', dataIndex: 'destHost', width: 110 },
             { title: 'Proxy', dataIndex: 'proxy', width: 110 },
+            { title: 'Local Addr', dataIndex: 'localAddress', width: 150 },
           ];
 
         return <View style={{ flex: 1 }}>

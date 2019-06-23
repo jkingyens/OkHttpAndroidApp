@@ -28,7 +28,7 @@ class NetworkHookEventListener(val androidNetworkManager: AndroidNetworkManager?
     }
 
     override fun connectionAcquired(call: Call, connection: Connection) {
-        Log.i("AndroidNetworkManager-l", "connectionAcquired " + connection.protocol() + " " + connection.route())
+        Log.i("AndroidNetworkManager-l", "connectionAcquired " + connection.protocol() + " " + connection.socket().localSocketAddress)
 
         androidNetworkManager?.connectionAcquired(call, connection)
     }
@@ -49,7 +49,7 @@ class NetworkHookEventListener(val androidNetworkManager: AndroidNetworkManager?
     }
 
     override fun callFailed(call: Call, ioe: IOException) {
-        androidNetworkManager?.unlinkCall(call)
+        androidNetworkManager?.unlinkCall()
         requestsLiveData.callFailed(call, ioe)
     }
 }

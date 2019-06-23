@@ -3,6 +3,7 @@ package ee.schimke.okhttp.android.networks
 import android.Manifest
 import android.arch.lifecycle.LiveData
 import android.support.annotation.RequiresPermission
+import android.util.Log
 import ee.schimke.okhttp.android.factory.listConnections
 import ee.schimke.okhttp.android.factory.noNewExchangesF
 import ee.schimke.okhttp.android.factory.successCountF
@@ -23,7 +24,7 @@ constructor(val connectionPool: ConnectionPool)
 
     private lateinit var activeTimer: Timer
     private var lastState: ConnectionPoolState? = null
-    private val connectionMap = mutableMapOf<Int, String>()
+    private val hashCodeToConnectionMap = mutableMapOf<Int, String>()
     private var connectionId = 0
 
     init {
@@ -41,6 +42,15 @@ constructor(val connectionPool: ConnectionPool)
 
     fun readState(): ConnectionPoolState {
         val connections = connectionPool.listConnections().map { it.toConnectionState() }
+
+        val knownConnections = connections.map { it.id }.toSet()
+        val droppedConnections = hashCodeToConnectionMap.filterNot { (_, connectionId) ->
+            knownConnections.contains(connectionId)
+        }
+        droppedConnections.forEach {(hashCode, _) ->
+            hashCodeToConnectionMap.remove(hashCode)
+        }
+
         return ConnectionPoolState(connectionPool.connectionCount(),
                 connectionPool.idleConnectionCount(), connections)
     }
@@ -49,14 +59,19 @@ constructor(val connectionPool: ConnectionPool)
         val r = route()
         val s = socket()
         val proxy = r.proxy()
+        val localIpAddress = s.localAddress.hostAddress
+        // TODO populate
+        val networkId: String? = null
         return ConnectionState(id(s), remoteIp(r), r.socketAddress().port,
                 if (proxy != Proxy.NO_PROXY) proxy.toString() else null,
-                r.address().url().host(), s.localAddress.hostAddress,
-                protocol(), this.noNewExchangesF, handshake()?.tlsVersion(), this.successCountF)
+                r.address().url().host(), localIpAddress,
+                protocol(), this.noNewExchangesF, handshake()?.tlsVersion(), this.successCountF,
+                networkId
+        )
     }
 
     private fun id(s: Socket): String {
-        return connectionMap.computeIfAbsent(System.identityHashCode(s)) {
+        return hashCodeToConnectionMap.computeIfAbsent(System.identityHashCode(s)) {
             "" + ++connectionId
         }
     }
