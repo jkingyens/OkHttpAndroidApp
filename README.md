@@ -12,7 +12,7 @@ Possible
 - Set handling for background/foreground connections
 - Batch network operations within app
 
-<img width="296" alt="image" src="https://user-images.githubusercontent.com/231923/59155710-99f99700-8a87-11e9-9096-1ee3e6da029f.png">
+<img width="330" alt="image" src="https://user-images.githubusercontent.com/231923/59976438-76bd0480-95bc-11e9-8f59-395e2506df3e.png">
 
 TODO
 
