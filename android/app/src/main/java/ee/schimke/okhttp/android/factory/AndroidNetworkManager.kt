@@ -15,6 +15,7 @@ import ee.schimke.okhttp.android.networks.NetworksLiveData
 import ee.schimke.okhttp.android.networks.RequestsLiveData
 import ee.schimke.okhttp.android.quic.QuicInterceptor
 import ee.schimke.okhttp.android.util.closeQuietly
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -38,6 +39,8 @@ class AndroidNetworkManager(private val application: Application,
     val availableNetworksLiveData = AvailableNetworksLiveData(application)
     var connectionLiveData = ConnectionsLiveData(connectionPool)
     var threadCall = ThreadLocal<Call>()
+
+    protected val managerScope = CoroutineScope(Dispatchers.IO)
 
     private lateinit var client: OkHttpClient
 
@@ -120,7 +123,10 @@ class AndroidNetworkManager(private val application: Application,
                     Log.i("AndroidNetworkManager", "soft closing ${it.route().socketAddress().hostString} due to network change")
 
                     it.noNewExchanges()
-                    it.socket().closeQuietly()
+
+                    managerScope.launch(Dispatchers.IO) {
+                        it.socket().closeQuietly()
+                    }
                 }
             }
         }
@@ -148,7 +154,7 @@ class AndroidNetworkManager(private val application: Application,
     }
 
     private fun startConnections(warmedConnections: List<String>) {
-        GlobalScope.launch(Dispatchers.IO) {
+        managerScope.launch(Dispatchers.IO) {
             warmedConnections.forEach {
                 val req = Request.Builder().url("https://$it/robots.txt").cacheControl(CacheControl.FORCE_NETWORK).build()
                 client.newCall(req).enqueue(object : Callback {
