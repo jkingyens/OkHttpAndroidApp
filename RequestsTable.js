@@ -8,7 +8,7 @@ export default class RequestsTable extends Component {
 
         this.state = {
             requests: [],
-            url: 'https://api.twitter.com/robots.txt'
+            url: 'https://twitter.com/robots.txt'
             //url: 'https://nghttp2.org/httpbin/delay/3'
         }
 

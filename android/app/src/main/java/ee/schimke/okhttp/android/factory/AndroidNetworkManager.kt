@@ -2,7 +2,6 @@ package ee.schimke.okhttp.android.factory
 
 import android.app.Application
 import android.content.Context
-import android.net.ProxyInfo
 import android.util.Log
 import com.babylon.certificatetransparency.Logger
 import com.babylon.certificatetransparency.VerificationResult
@@ -11,6 +10,7 @@ import ee.schimke.okhttp.android.android.AppForegroundStatus
 import ee.schimke.okhttp.android.android.AppForegroundStatusListener
 import ee.schimke.okhttp.android.android.PhoneStatusLiveData
 import ee.schimke.okhttp.android.android.initConscrypt
+import ee.schimke.okhttp.android.model.AvailableNetwork
 import ee.schimke.okhttp.android.model.NetworkEvent
 import ee.schimke.okhttp.android.networks.AvailableNetworksLiveData
 import ee.schimke.okhttp.android.networks.ConnectionsLiveData
@@ -25,21 +25,29 @@ import okhttp3.*
 import okhttp3.dnsoverhttps.DnsOverHttps
 import okhttp3.internal.connection.RealConnection
 import java.io.IOException
-import java.net.*
+import java.net.InetAddress
+import java.net.Proxy
+import java.net.Socket
+import java.net.URI
 import java.util.concurrent.TimeUnit
+import android.support.v4.content.ContextCompat.getSystemService
+import android.os.PowerManager
+
+
 
 class AndroidNetworkManager(private val application: Application,
-                            private val config: Config,
-                            private val networkSelector: NetworkSelector) : AppForegroundStatusListener {
+                            private val config: Config) : AppForegroundStatusListener {
     val connectionPool = ConnectionPool(10, 5, TimeUnit.MINUTES)
     val networksLiveData = NetworksLiveData(application)
     val requestsLiveData = RequestsLiveData()
     val phoneStatusLiveData = PhoneStatusLiveData(application)
     val availableNetworksLiveData = AvailableNetworksLiveData(application)
     var connectionLiveData = ConnectionsLiveData(connectionPool)
+    var threadCall = ThreadLocal<Call>()
 
     private lateinit var client: OkHttpClient
 
+    private val uriCallMap = mutableMapOf<String, Call>()
     private val networkConnectionMap = mutableMapOf<String, MutableList<RealConnection>>()
     private val callNetworkMap = mutableMapOf<Call, String?>()
     private val dispatcher = Dispatcher()
@@ -64,9 +72,7 @@ class AndroidNetworkManager(private val application: Application,
             failOnError = false
             logger = object : Logger {
                 override fun log(host: String, result: VerificationResult) {
-                    if (result is VerificationResult.Success) {
-                        Log.i("AndroidNetworkManager", "ct: $host $result")
-                    } else {
+                    if (result !is VerificationResult.Success) {
                         Log.w("AndroidNetworkManager", "ct: $host $result")
                     }
                 }
@@ -84,7 +90,7 @@ class AndroidNetworkManager(private val application: Application,
                 .writeTimeout(10, TimeUnit.SECONDS)
                 .socketFactory(SmartSocketFactory(this))
                 .proxySelector(AndroidProxySelector(this))
-                .eventListenerFactory { NetworkHookEventListener(this, it, requestsLiveData) }
+                .eventListenerFactory { NetworkHookEventListener(this, requestsLiveData) }
                 // TODO conditional / foreground / background
                 .pingInterval(3, TimeUnit.SECONDS)
                 .addInterceptor(QuicInterceptor { config.quicHosts.contains(it.url().host()) })
@@ -106,8 +112,9 @@ class AndroidNetworkManager(private val application: Application,
         }
 
         availableNetworksLiveData.observeForever { t ->
-            val availableNetworkIds = t?.networks?.filter { it.connected }?.map { it.id }.orEmpty()
+            val networks = t?.networks.orEmpty()
 
+            val availableNetworkIds = networks.filter { it.connected }.map { it.id }
             val droppedNetworkIds = networkConnectionMap.keys.toList().filterNot { availableNetworkIds.contains(it) }
 
             droppedNetworkIds.forEach { nid ->
@@ -121,6 +128,11 @@ class AndroidNetworkManager(private val application: Application,
         }
 
         AppForegroundStatus.addListener(this)
+
+        // TODO more fine grained foreground/background power control
+//        val pm = getSystemService(application, PowerManager::class.java) as PowerManager
+//        val partialLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "okhttp:wakelock")
+//        partialLock.acquire(30000)
     }
 
     private fun cloudflare(baseClient: OkHttpClient): DnsOverHttps =
@@ -184,31 +196,59 @@ class AndroidNetworkManager(private val application: Application,
     fun createOkHttpClient() = client
 
     fun selectLocalSocketAddress(s: Socket) {
-        val n = activeNetwork()
+        val n = callNetwork()
 
-        if (n != null) {
-            n.network.bindSocket(s)
-        }
+        Log.i("AndroidNetworkManager", "selectLocalSocketAddress ${n?.type}")
+
+        n?.network?.bindSocket(s)
     }
 
     fun callStart(call: Call) {
-        Log.i("AndroidNetworkManager", "callStart ${call.request().url()}")
+        val url = call.request().url().newBuilder().encodedPath("/").build()
+        uriCallMap[url.toString()] = call
 
-        callNetworkMap[call] = activeNetwork()?.id
+        Log.i("AndroidNetworkManager", "callStart $url")
+
+        val activeNetworks = activeNetworks(call)
+
+        if (activeNetworks == null || activeNetworks.isNotEmpty()) {
+            callNetworkMap[call] = activeNetworks?.first()?.id
+        } else {
+            call.cancel()
+        }
     }
 
     fun callEnd(call: Call) {
-        Log.i("AndroidNetworkManager", "callEnd ${call.request().url()}")
+        callNetworkMap.remove(call)
     }
 
-    fun isOfflineFor(url: HttpUrl): Boolean {
-        return activeNetwork() == null
+    fun isOfflineFor(call: Call): Boolean {
+        val activeNetworks = activeNetworks(call)
+        return activeNetworks != null && activeNetworks.isNotEmpty()
     }
 
-    private fun activeNetwork() = availableNetworksLiveData.value?.networks?.firstOrNull { it.connected }
+    private fun activeNetworks(call: Call?): List<AvailableNetwork>? {
+        val networks = availableNetworksLiveData.value?.networks ?: return null
+
+        val orderAndSelect = config.networkSelector.orderAndSelect(networks, call?.request()?.url())
+
+        Log.i("AndroidNetworkManager", "activeNetworks ${networks.map { it.type }} ${orderAndSelect?.map { it.id }}")
+
+        return orderAndSelect
+    }
+
+    private fun callNetwork(): AvailableNetwork? {
+        val call: Call? = threadCall.get()
+
+        val networkId = callNetworkMap[call]
+
+        Log.i("AndroidNetworkManager", "callNetwork network ${call?.request()?.url()} $networkId")
+
+        return availableNetworksLiveData.value?.networks?.find { it.id == networkId }
+    }
 
     fun lookupDns(hostname: String): List<InetAddress> {
-        val n = activeNetwork()
+        val n = callNetwork()
 
         if (n != null) {
             return n.network.getAllByName(hostname).toList()
@@ -227,13 +267,25 @@ class AndroidNetworkManager(private val application: Application,
     }
 
     fun selectProxy(uri: URI?): List<Proxy> {
-        val n = activeNetwork()
+        val call = uriCallMap.remove(uri.toString())
 
-        if (n != null) {
-            val proxy: ProxyInfo? = n.properties.httpProxy
+        Log.i("AndroidNetworkManager", "selectProxy $uri ${if (call != null) "" else "nocall"}")
 
-            if (proxy != null) {
-                listOf(proxy.toProxy())
+        if (call != null) {
+            threadCall.set(call)
+
+            val networks = activeNetworks(call)
+
+            // select the network for call
+            val network = networks?.firstOrNull()
+
+            Log.i("AndroidNetworkManager", "selectProxy network ${network?.network}")
+
+            if (network != null) {
+                callNetworkMap[call] = network.id
+
+                // TODO use pac file etc?
+                return listOf(network.properties.httpProxy?.toProxy() ?: Proxy.NO_PROXY)
             }
         }
 
@@ -243,10 +295,12 @@ class AndroidNetworkManager(private val application: Application,
     fun networkForCall(call: Call): String? {
         return callNetworkMap[call]
     }
-}
 
-private fun ProxyInfo.toProxy(): Proxy {
-    // TODO find using library? exclusions?
+    fun linkCall(call: Call) {
+        threadCall.set(call)
+    }
 
-    return Proxy(Proxy.Type.HTTP, InetSocketAddress.createUnresolved(this.host, this.port))
+    fun unlinkCall(call: Call) {
+        threadCall.remove()
+    }
 }

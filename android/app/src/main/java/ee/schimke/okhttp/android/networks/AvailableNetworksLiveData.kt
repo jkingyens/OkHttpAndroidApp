@@ -5,12 +5,13 @@ import android.arch.lifecycle.LiveData
 import android.content.Context
 import android.net.*
 import android.net.wifi.WifiManager
+import android.util.Log
 import ee.schimke.okhttp.android.model.AvailableNetwork
 import ee.schimke.okhttp.android.model.AvailableNetworks
 import ee.schimke.okhttp.android.model.NetworkStatus
 import ee.schimke.okhttp.android.model.NetworkType
 
-class AvailableNetworksLiveData(val application: Application): LiveData<AvailableNetworks>() {
+class AvailableNetworksLiveData(val application: Application) : LiveData<AvailableNetworks>() {
     internal val connectivityManager: ConnectivityManager =
             application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     internal val wifiManager =
@@ -20,17 +21,14 @@ class AvailableNetworksLiveData(val application: Application): LiveData<Availabl
 
     private val networkCallback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) {
-            val info = connectivityManager.getNetworkInfo(network)
-            val capabilities = connectivityManager.getNetworkCapabilities(network)
-            val properties = connectivityManager.getLinkProperties(network)
-
-            val type = NetworkType.toType(capabilities)
+            val availableNetwork = describeNetwork(network)
 
             synchronized(availableNetworks) {
-                availableNetworks[network.toString()] =
-                        AvailableNetwork(network.toString(), network, info.isConnected,
-                                type, NetworkStatus.Available, properties)
+                availableNetworks[network.toString()] = availableNetwork
             }
+
+            Log.i("AndroidNetworkManager-anld", "onAvailable $network ${availableNetwork.type}")
+
             postUpdate()
         }
 
@@ -55,14 +53,26 @@ class AvailableNetworksLiveData(val application: Application): LiveData<Availabl
         }
     }
 
+    private fun describeNetwork(network: Network): AvailableNetwork {
+        val info = connectivityManager.getNetworkInfo(network)
+        val capabilities = connectivityManager.getNetworkCapabilities(network)
+        val properties = connectivityManager.getLinkProperties(network)
+
+        val type = NetworkType.toType(capabilities)
+
+        return AvailableNetwork(network.toString(), network, info.isConnected,
+                type, NetworkStatus.Available, properties)
+    }
+
     private fun postUpdate() {
         val n = AvailableNetworks(availableNetworks.values.toList())
         postValue(n)
     }
 
     override fun onActive() {
-        val request = NetworkRequest.Builder().addCapability(
-                NetworkCapabilities.NET_CAPABILITY_INTERNET).build()
+        val request = NetworkRequest.Builder()
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                .build()
         connectivityManager.registerNetworkCallback(request, networkCallback)
     }
 

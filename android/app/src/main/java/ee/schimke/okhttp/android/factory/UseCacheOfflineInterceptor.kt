@@ -7,7 +7,7 @@ import okhttp3.Response
 class UseCacheOfflineInterceptor(private val androidNetworkManager: AndroidNetworkManager): Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request().run {
-            val offline = androidNetworkManager.isOfflineFor(chain.request().url())
+            val offline = androidNetworkManager.isOfflineFor(chain.call())
 
             if (offline) {
                 newBuilder().cacheControl(CacheControl.FORCE_CACHE).build()

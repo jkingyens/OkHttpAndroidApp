@@ -10,14 +10,14 @@ import com.okhttpandroidapp.reactnative.AppReactNativeHost
 import com.okhttpandroidapp.reactnative.NetworksPackage
 import com.okhttpandroidapp.reactnative.OptimisedNetworkModule
 import ee.schimke.okhttp.android.android.PhoneStatusLiveData
-import ee.schimke.okhttp.android.factory.AndroidNetworkManager
-import ee.schimke.okhttp.android.factory.Config
-import ee.schimke.okhttp.android.factory.NetworkHookEventListener
-import ee.schimke.okhttp.android.factory.NetworkSelector
+import ee.schimke.okhttp.android.factory.*
+import ee.schimke.okhttp.android.model.AvailableNetwork
+import ee.schimke.okhttp.android.model.NetworkType
 import ee.schimke.okhttp.android.networks.ConnectionsLiveData
 import ee.schimke.okhttp.android.networks.NetworksLiveData
 import ee.schimke.okhttp.android.networks.RequestsLiveData
 import okhttp3.ConnectionPool
+import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
 
@@ -27,7 +27,24 @@ class MainApplication : Application(), ReactApplication {
     internal lateinit var networksPackage: NetworksPackage
     internal val mReactNativeHost = AppReactNativeHost(this)
 
+    val optimised = true
+
+    val CellFirst = object : NetworkSelector {
+        override fun orderAndSelect(networks: List<AvailableNetwork>, url: HttpUrl?): List<AvailableNetwork>? {
+            val wifi = url?.host()?.contains("facebook") ?: false
+
+            val desired = networks.filter { (it.type == NetworkType.Wifi) == wifi }
+
+            return if (desired.isNotEmpty()) {
+                desired
+            } else {
+                networks
+            }
+        }
+    }
+
     val config = Config(
+            conscrypt = false,
             useCache = false,
             ctHosts = listOf(
                     "*.facebook.com",
@@ -35,9 +52,11 @@ class MainApplication : Application(), ReactApplication {
                     "*.google.com",
                     "httpbin.org",
                     "nghttp2.org"),
-            quicHosts = listOf("google.com", "www.google.com"),
-            warmedConnections = listOf("facebook.com", "twitter.com", "api.twitter.com", "graph.facebook.com", "httpbin.org", "nghttp2.org"),
-            doh = true)
+//            quicHosts = listOf("google.com", "www.google.com"),
+            warmedConnections = listOf("facebook.com", "twitter.com"),
+//            warmedConnections = listOf("facebook.com", "twitter.com", "api.twitter.com", "graph.facebook.com", "httpbin.org", "nghttp2.org"),
+            doh = false,
+            networkSelector = CellFirst)
 
     override fun getReactNativeHost(): ReactNativeHost {
         return mReactNativeHost
@@ -51,11 +70,10 @@ class MainApplication : Application(), ReactApplication {
     }
 
     private fun initializeNetworks() {
-        if (config.optimised) {
+        if (optimised) {
             androidNetworkManager = AndroidNetworkManager(
                     this,
-                    config,
-                    NetworkSelector.WifiFirst
+                    config
             ).apply {
                 initialise(applicationContext)
 
@@ -86,7 +104,7 @@ class MainApplication : Application(), ReactApplication {
                         .readTimeout(0, TimeUnit.MILLISECONDS)
                         .writeTimeout(0, TimeUnit.MILLISECONDS)
                         .cookieJar(ReactCookieJarContainer())
-                        .eventListenerFactory { NetworkHookEventListener(null, it, requestsLiveData) }
+                        .eventListenerFactory { NetworkHookEventListener(null, requestsLiveData) }
                         .build()
             }
         }
