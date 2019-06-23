@@ -16,19 +16,11 @@ Possible
 
 TODO
 
-- Correct/Complete network selection/detection
-- Wire up client selection strategies
 - Allow overriding e.g. forcing a specific connection without disconnecting
 - Understand Multipath TCP (http://amiusingmptcp.de/)
-- Show clean usage of stats e.g. how would you monitor this
 - publish a separate library
 - test with live different proxies
-- Support down to Android 21+
 - Switch address to force reconnects using SocketFactory etc?
-- Airplane mode
-- Hard close/prune connections
-- keep connection open in foreground, close on background
-- DNS over HTTPS
 - https://github.com/facebookincubator/Battery-Metrics
 
 Experiments
